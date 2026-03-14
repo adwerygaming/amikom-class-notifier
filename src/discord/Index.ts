@@ -24,9 +24,8 @@ client.on(Events.ClientReady, async (bot: Client) => {
   console.log(`[${tags.Discord}] Username     : ${bot?.user?.username ?? '-'}`);
   console.log(`[${tags.Discord}] Display Name : ${bot?.user?.displayName ?? '-'}`);
   console.log(`[${tags.Discord}] Tags         : ${bot?.user?.discriminator ?? '-'}`);
-  console.log(`[${tags.Discord}] Servers      : ${bot?.guilds.cache.size ?? '-'} Server${bot?.guilds?.cache?.size > 1 ? 's' : ''}`);
+  console.log(`[${tags.Discord}] Servers      : ${bot?.guilds.cache.size ?? '-'} Server${bot?.guilds?.cache?.size !== 1 ? 's' : ''}`);
   console.log('');
-
 });
 
 client.on(Events.InteractionCreate, async interaction => {

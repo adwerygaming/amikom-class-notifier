@@ -33,10 +33,18 @@ if (!fs.existsSync(dataPath)) {
 export class Amikom {
     async writeSchedule(raw_schedule: string): Promise<void> {
         try {
-            const schedule = scheduleSchema.safeParse(JSON.parse(raw_schedule))
-            
+            let rawSchedule: unknown
+
+            try {
+                rawSchedule = JSON.parse(raw_schedule)
+            } catch {
+                throw new Error(`[${tags.Error}] Failed to parse raw schedule data.`);
+            }
+
+            const schedule = scheduleSchema.safeParse(rawSchedule)
+
             if (!schedule.success) {
-                throw new Error(`[${tags.Error}] The schedule appears to be in an invalid format.`, schedule.error)
+                throw new Error(`[${tags.Error}] The schedule appears to be in an invalid format.`, { cause: schedule.error })
             }
 
             await fs.promises.writeFile(schedulePath, JSON.stringify(schedule.data, null, 2), "utf-8")
@@ -50,10 +58,18 @@ export class Amikom {
     async readSchedule(): Promise<ClassSchedule[]> {
         try {
             const data = await fs.promises.readFile(schedulePath, "utf-8")
-            const schedule = scheduleSchema.safeParse(JSON.parse(data))
+            let rawSchedule: unknown
+
+            try {
+                rawSchedule = JSON.parse(data)
+            } catch {
+                throw new Error(`[${tags.Error}] Failed to parse schedule data from file.`);
+            }
+            
+            const schedule = scheduleSchema.safeParse(rawSchedule)
 
             if (!schedule.success) {
-                throw new Error(`[${tags.Error}] The schedule appears to be in an invalid format.`, schedule.error)
+                throw new Error(`[${tags.Error}] The schedule appears to be in an invalid format.`, { cause: schedule.error })
             }
 
             return schedule.data

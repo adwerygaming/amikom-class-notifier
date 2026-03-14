@@ -4,7 +4,7 @@
       "Name": "acn-db",
       "Group": "Servers",
       "Host": "acn-db",
-      "Port": 6767,
+      "Port": 5432,
       "MaintenanceDB": "postgres",
       "Username": "acn",
       "SSLMode": "prefer"

@@ -12,7 +12,7 @@ redisClient.on('connect', () => {
 });
 
 redisClient.on('close', () => {
-    console.log(`[${tags.Redis}] Redis closed it's connection`);
+    console.log(`[${tags.Redis}] Redis closed its connection`);
 });
 
 redisClient.on('error', (err) => {

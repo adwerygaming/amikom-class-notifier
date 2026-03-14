@@ -15,7 +15,14 @@ async function start(): Promise<void> {
     )
 
     sub.on("message", (channel, message) => {
-        const schedule = JSON.parse(message) as ClassSchedule
+        let schedule: ClassSchedule
+
+        try {
+            schedule = JSON.parse(message) as ClassSchedule
+        } catch (e) {
+            console.error(`[${channel}] Failed to parse message:`, e)
+            return
+        }
 
         if (channel === ReminderEvent.StartingNow) {
             console.log(`[${channel}] Class "${schedule.MataKuliah}" is starting now!`)

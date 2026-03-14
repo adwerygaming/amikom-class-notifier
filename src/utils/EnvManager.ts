@@ -10,8 +10,10 @@ import tags from "./Tags.js";
 const envSchema = z.object({
     NODE_ENV: z.enum(["PROD", "DEV"]).optional(),
 
-    DISCORD_TOKEN: z.string(),
-    DISCORD_CLIENT_ID: z.string()
+    DISCORD_TOKEN: z.string().trim().min(1),
+    DISCORD_CLIENT_ID: z.string().trim().min(1),
+
+    PG_CONNECTION_STRING: z.string().trim().min(1),
 })
 
 const __filename = fileURLToPath(import.meta.url);
