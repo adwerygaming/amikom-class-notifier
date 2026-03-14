@@ -143,3 +143,6 @@ docker
 # This line was added by .commitai
 # This is a directory for storing commitai stuff to make commit generation better
 .commitai/*
+
+# treat schedule data as secret
+schedule.json

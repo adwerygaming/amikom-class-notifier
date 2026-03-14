@@ -8,6 +8,20 @@ interface RegisterProp {
     mentions?: string[]
 }
 
+export class DuplicateSubscriptionError extends Error {
+    constructor(guildId: string) {
+        super(`Guild ${guildId} is already registered.`)
+        this.name = "DuplicateSubscriptionError"
+    }
+}
+
+export class InvalidSubscriptionDataError extends Error {
+    constructor(message: string) {
+        super(message)
+        this.name = "InvalidSubscriptionDataError"
+    }
+}
+
 export class Subscriptions {
     constructor(
         private readonly guildId: string
@@ -30,6 +44,23 @@ export class Subscriptions {
         }
     }
 
+    async update({ ...props }: Partial<Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified">>): Promise<SubscriptionSchema> {
+        if (Object.keys(props).length === 0) {
+            throw new Error("No fields provided to update.")
+        }
+
+        try {
+            const [res] = await this.db()
+                .where("guild_id", this.guildId)
+                .update({ ...props })
+                .returning("*")
+
+            return res
+        } catch (e) {
+            throw new Error(`Failed to update subscriptions for guild ${this.guildId}.`, { cause: e })
+        }
+    }
+
     async register({ channelId, userId, mentions }: RegisterProp): Promise<SubscriptionSchema> {
         try {
             const [res] = await this.db()
@@ -42,7 +73,16 @@ export class Subscriptions {
                 .returning("*")
 
             return res
-        } catch (e) {
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+            if (e.code === "23505") { // unique violation
+                throw new DuplicateSubscriptionError(this.guildId)            
+            } else if (e.code === "22P02") { // invalid text representation, likely due to mentions array not being in correct format
+                throw new InvalidSubscriptionDataError("Invalid data format for subscription. Please check your input.")
+            }
+
+            // generic error fallback
             throw new Error(`Failed to register subscription for guild ${this.guildId}.`, { cause: e })
         }
     }
