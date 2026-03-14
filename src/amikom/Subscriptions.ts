@@ -44,7 +44,7 @@ export class Subscriptions {
         }
     }
 
-    async update({ ...props }: Partial<Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified">>): Promise<SubscriptionSchema> {
+    async update(props: Partial<Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified">>): Promise<SubscriptionSchema | null> {
         if (Object.keys(props).length === 0) {
             throw new Error("No fields provided to update.")
         }
@@ -52,10 +52,10 @@ export class Subscriptions {
         try {
             const [res] = await this.db()
                 .where("guild_id", this.guildId)
-                .update({ ...props })
+                .update(props)
                 .returning("*")
 
-            return res
+            return res ?? null
         } catch (e) {
             throw new Error(`Failed to update subscriptions for guild ${this.guildId}.`, { cause: e })
         }

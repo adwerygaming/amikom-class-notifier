@@ -17,6 +17,11 @@ interface CheckConfig {
     debugTime?: moment.Moment
 }
 
+interface ResolveClassTimeResult {
+    start: moment.Moment
+    end: moment.Moment
+}
+
 export class Reminder {
     private readonly state = redisClient.duplicate()
     private readonly pub = redisClient.duplicate()
@@ -24,6 +29,15 @@ export class Reminder {
     private convertStringTimeToMoment(time: string): moment.Moment {
         const [hour, minute] = time.split(":").map(Number)
         return moment().tz("Asia/Jakarta").set({ hour, minute, second: 0, millisecond: 0 })
+    }
+
+    private resolveClassTime(time: string): ResolveClassTimeResult {
+        const [start, end] = time.split("-")
+
+        return {
+            start: this.convertStringTimeToMoment(start),
+            end: this.convertStringTimeToMoment(end),
+        }
     }
 
     private getTodayDateKey(): string {
@@ -80,12 +94,12 @@ export class Reminder {
             }
 
             for (const schedule of todaySchedule) {
-                const classTime = this.convertStringTimeToMoment(schedule.Waktu)
-                const diff = classTime.diff(now, "minutes")
+                // there is also endTime, you can implement endInX events if u want.
+                const { start: startTime } = this.resolveClassTime(schedule.Waktu)
+                const diff = startTime.diff(now, "minutes")
                 const inWindow = (targetMinutes: number): boolean => diff <= targetMinutes && diff > targetMinutes - 1
 
                 // what? DRY? who cares?
-                // Waguri-san: i care about you :3 *nyah*
 
                 const hasNotifyStartingNow = await this.getState(ReminderEvent.StartingNow, schedule.Kode)
                 if (inWindow(0) && !hasNotifyStartingNow) {
