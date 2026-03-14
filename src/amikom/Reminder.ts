@@ -5,8 +5,10 @@ import redisClient from "../database/RedisClient.js"
 import { ReminderEvent } from "../types/ACN.types.js"
 import tags from "../utils/Tags.js"
 import { Amikom } from "./Amikom.js"
+import { Helper } from "./Helper.js"
 
 const amikom = new Amikom()
+const helper = new Helper()
 
 interface ReminderConfig {
     intervalSeconds: number
@@ -17,44 +19,12 @@ interface CheckConfig {
     debugTime?: moment.Moment
 }
 
-interface ResolveClassTimeResult {
-    start: moment.Moment
-    end: moment.Moment
-}
-
 export class Reminder {
     private readonly state = redisClient.duplicate()
     private readonly pub = redisClient.duplicate()
 
-    private convertStringTimeToMoment(time: string): moment.Moment {
-        if (!time || !time.includes(":")) {
-            throw new Error(`Invalid time format: ${time}. Expected format "HH:mm-HH:mm".`)
-        }
-
-        const [hour, minute] = time.split(":").map(Number)
-
-        if (isNaN(hour) || isNaN(minute)) {
-            throw new Error(`Invalid time values in: ${time}`)
-        }
-
-        return moment().tz("Asia/Jakarta").set({ hour, minute, second: 0, millisecond: 0 })
-    }
-
-    private resolveClassTime(time: string): ResolveClassTimeResult {
-        const [start, end] = time.split("-")
-
-        return {
-            start: this.convertStringTimeToMoment(start),
-            end: this.convertStringTimeToMoment(end),
-        }
-    }
-
-    private getTodayDateKey(): string {
-        return moment().tz("Asia/Jakarta").format("YYYY-MM-DD")
-    }
-
     private async getState(event: ReminderEvent, classCode: string): Promise<boolean> {
-        const todayDateKey = this.getTodayDateKey()
+        const todayDateKey = helper.getTodayDateKey()
         const key = `reminder:${todayDateKey}:${classCode}:${event}`
 
         const value = await this.state.get(key)
@@ -62,7 +32,7 @@ export class Reminder {
     }
 
     private async setState(event: ReminderEvent, classCode: string, value: boolean): Promise<void> {
-        const todayDateKey = this.getTodayDateKey()
+        const todayDateKey = helper.getTodayDateKey()
         const key = `reminder:${todayDateKey}:${classCode}:${event}`
 
         // 24h expiration to prevent stale data and duplicate notifications.
@@ -104,7 +74,7 @@ export class Reminder {
 
             for (const schedule of todaySchedule) {
                 // there is also endTime, you can implement endInX events if u want.
-                const { start: startTime } = this.resolveClassTime(schedule.Waktu)
+                const { start: startTime } = helper.resolveClassTime(schedule.Waktu)
                 const diff = startTime.diff(now, "minutes")
                 const inWindow = (targetMinutes: number): boolean => diff <= targetMinutes && diff > targetMinutes - 1
 

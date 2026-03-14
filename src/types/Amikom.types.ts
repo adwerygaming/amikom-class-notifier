@@ -1,6 +1,6 @@
 import z from "zod"
 
-export const amikomLogoURL = "https://w7.pngwing.com/pngs/447/956/png-transparent-university-of-amikom-yogyakarta-yogyakarta-state-university-logo-id-miscellaneous-purple-text.png"
+export const amikomLogoURL = "https://i.postimg.cc/8P5XGmgz/Logo-Gram.png"
 
 export type ListHari = "SENIN" | "SELASA" | "RABU" | "KAMIS" | "JUMAT"
 
