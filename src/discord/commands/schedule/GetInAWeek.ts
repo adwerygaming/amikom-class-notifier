@@ -65,22 +65,48 @@ export default {
                 const items = grouped[day]
                 if (!items?.length) continue
 
-                const dayDate = now.clone().isoWeekday(dayToIso[day]).format("DD MMMM YYYY")
+                const baseDay = now.clone().isoWeekday(dayToIso[day])
+                const dayDate = baseDay.format("DD MMMM YYYY")
                 const isToday = now.isoWeekday() === dayToIso[day]
 
                 const cb = new ContainerBuilder()
-                    .setAccentColor(isToday ? Colors.White : Colors.DarkPurple)
+                    .setAccentColor(isToday ? Colors.Orange : Colors.DarkPurple)
                     .addTextDisplayComponents(text => text.setContent(`**${day}** - ${dayDate}`))
-                    .addSeparatorComponents(sep => sep)
 
                 const limited = items.slice(0, PER_DAY_LIMIT)
+                let nextName: string | null = null
+                let nextStart: moment.Moment | null = null
+                const classDisplays: string[] = []
 
                 for (const s of limited) {
                     const { start: startTime, end: endTime } = helper.resolveClassTime(s.Waktu)
                     const time = `${startTime.format("HH:mm")} - ${endTime.format("HH:mm")}`
                     const duration = formatDuration(endTime.diff(startTime, "minutes"))
 
-                    cb.addTextDisplayComponents(text => text.setContent(`> **${s.MataKuliah}**\n> 👤 _${s.NamaDosen}_\n> ⏱️ **${time}** (${duration})\n> 🚪 _${s.Ruang}_`))
+                    const classStart = baseDay.clone().set({
+                        hour: startTime.hour(),
+                        minute: startTime.minute(),
+                        second: 0,
+                        millisecond: 0,
+                    })
+
+                    if (isToday && classStart.isAfter(now) && (!nextStart || classStart.isBefore(nextStart))) {
+                        nextStart = classStart
+                        nextName = s.MataKuliah
+                    }
+
+                    classDisplays.push(`> **${s.MataKuliah}**\n> 👤 _${s.NamaDosen}_\n> ⏱️ **${time}** (${duration})\n> 🚪 _${s.Ruang}_`)
+                }
+
+                if (isToday && nextStart && nextName) {
+                    const countdown = `<t:${nextStart.unix()}:R>`
+                    cb.addTextDisplayComponents(text => text.setContent(`**Next: ${nextName} in ${countdown}**`))
+                }
+
+                cb.addSeparatorComponents(sep => sep)
+
+                for (const display of classDisplays) {
+                    cb.addTextDisplayComponents(text => text.setContent(display))
                 }
 
                 if (items.length > PER_DAY_LIMIT) {
