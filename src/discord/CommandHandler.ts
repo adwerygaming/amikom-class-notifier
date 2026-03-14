@@ -2,7 +2,7 @@ import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteractio
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import type { ButtonLayout, DropdownLayout, ModalLayout, SlashCommandLayout } from '../types/DiscordTypes.js';
+import type { ButtonLayout, DropdownLayout, ModalLayout, SlashCommandLayout } from '../types/Discord.types.js';
 import { env } from '../utils/EnvManager.js';
 import tags from '../utils/Tags.js';
 import client from './Client.js';

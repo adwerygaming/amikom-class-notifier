@@ -1,5 +1,5 @@
-import { SlashCommandBuilder, Client, ChatInputCommandInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, EmbedBuilder, Colors } from "discord.js";
-import { SlashCommandLayout } from "../../../types/DiscordTypes.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, Colors, EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { SlashCommandLayout } from "../../../types/Discord.types.js";
 
 export default {
     metadata: new SlashCommandBuilder()

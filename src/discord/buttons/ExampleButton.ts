@@ -1,5 +1,5 @@
 import { ButtonInteraction, Client, Colors, EmbedBuilder } from "discord.js";
-import { ButtonLayout } from "../../types/DiscordTypes.js";
+import { ButtonLayout } from "../../types/Discord.types.js";
 
 export default {
     id: "exampleButton",

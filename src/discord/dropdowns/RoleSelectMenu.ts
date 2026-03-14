@@ -1,5 +1,5 @@
 import { AnySelectMenuInteraction, Client, Colors, EmbedBuilder } from "discord.js";
-import { DropdownLayout } from "../../types/DiscordTypes.js";
+import { DropdownLayout } from "../../types/Discord.types.js";
 
 export default {
     id: "exampleRoleSelectMenu",

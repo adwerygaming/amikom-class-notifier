@@ -12,6 +12,8 @@ const RawTags = {
   Info: { colors: ['#1ABC9C', '#16A085'] },
   Job: { colors: ['#607D8B', '#455A64'] },
   Database: { colors: ['#336791', '#003B57'] },
+  Redis: { colors: ['#E74C3C', '#C0392B'] },
+  Reminder: { colors: ['#9B59B6', '#8E44AD'] },
 };
 
 type TagConfig = { colors: string[] };
