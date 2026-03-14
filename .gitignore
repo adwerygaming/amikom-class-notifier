@@ -129,6 +129,18 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# MasDepan's list
+db/*.sqlite
+Summary.txt
+*.sqlite
+test/*
+test/
+
+# Docker
+docker/**
+!docker/**/
+!docker/**/*compose.yml
+!docker/**/*.example
 
 # This line was added by .commitai
 # This is a directory for storing commitai stuff to make commit generation better
