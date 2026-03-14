@@ -4,9 +4,12 @@ import client from './Client.js';
 
 console.log(`[${tags.System}] Loaded Discord Index Script.`)
 
+import { Reminder } from '../amikom/Reminder.js';
 import { CommandHandler } from './CommandHandler.js';
 
 const commandHandler = new CommandHandler();
+
+const reminder = new Reminder()
 
 client.on(Events.ClientReady, async (bot: Client) => {
   // loads commands
@@ -26,6 +29,11 @@ client.on(Events.ClientReady, async (bot: Client) => {
   console.log(`[${tags.Discord}] Tags         : ${bot?.user?.discriminator ?? '-'}`);
   console.log(`[${tags.Discord}] Servers      : ${bot?.guilds.cache.size ?? '-'} Server${bot?.guilds?.cache?.size !== 1 ? 's' : ''}`);
   console.log('');
+
+  // await reminder.start({
+  //   intervalSeconds: 2,
+  //   debugTime: moment("05:00", "HH:mm").tz("Asia/Jakarta")
+  // })
 });
 
 client.on(Events.InteractionCreate, async interaction => {

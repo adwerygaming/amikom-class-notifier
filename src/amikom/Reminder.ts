@@ -27,7 +27,16 @@ export class Reminder {
     private readonly pub = redisClient.duplicate()
 
     private convertStringTimeToMoment(time: string): moment.Moment {
+        if (!time || !time.includes(":")) {
+            throw new Error(`Invalid time format: ${time}. Expected format "HH:mm-HH:mm".`)
+        }
+
         const [hour, minute] = time.split(":").map(Number)
+
+        if (isNaN(hour) || isNaN(minute)) {
+            throw new Error(`Invalid time values in: ${time}`)
+        }
+
         return moment().tz("Asia/Jakarta").set({ hour, minute, second: 0, millisecond: 0 })
     }
 

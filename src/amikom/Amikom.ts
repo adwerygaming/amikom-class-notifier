@@ -22,13 +22,13 @@ export class Amikom {
             try {
                 rawSchedule = JSON.parse(raw_schedule)
             } catch {
-                throw new Error(`[${tags.Error}] Failed to parse raw schedule data.`);
+                throw new Error("Failed to parse raw schedule data.");
             }
 
             const schedule = scheduleSchema.safeParse(rawSchedule)
 
             if (!schedule.success) {
-                throw new Error(`[${tags.Error}] The schedule appears to be in an invalid format.`, { cause: schedule.error })
+                throw new Error("The schedule appears to be in an invalid format.", { cause: schedule.error })
             }
 
             await fs.promises.writeFile(schedulePath, JSON.stringify(schedule.data, null, 2), "utf-8")
@@ -40,6 +40,10 @@ export class Amikom {
     }
 
     async readSchedule(): Promise<ClassSchedule[]> {
+        if (!fs.existsSync(schedulePath)) {
+            throw new Error(`Schedule file not found at ${schedulePath}. Please make sure to write the schedule first.`)
+        }
+
         try {
             const data = await fs.promises.readFile(schedulePath, "utf-8")
             let rawSchedule: unknown
@@ -47,13 +51,13 @@ export class Amikom {
             try {
                 rawSchedule = JSON.parse(data)
             } catch {
-                throw new Error(`[${tags.Error}] Failed to parse schedule data from file.`);
+                throw new Error("Failed to parse schedule data from file.");
             }
             
             const schedule = scheduleSchema.safeParse(rawSchedule)
 
             if (!schedule.success) {
-                throw new Error(`[${tags.Error}] The schedule appears to be in an invalid format.`, { cause: schedule.error })
+                throw new Error("The schedule appears to be in an invalid format.", { cause: schedule.error })
             }
 
             return schedule.data

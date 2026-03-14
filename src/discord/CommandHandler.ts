@@ -49,7 +49,7 @@ export class CommandHandler {
                     const subFilePath = path.join(fullPath, subFile);
                     const { default: command } = await import(pathToFileURL(subFilePath).href) as { default: SlashCommandLayout };
                     
-                    if (command.metadata) {
+                    if (command?.metadata) {
                         const commandName = command.metadata.name;
                         group.set(commandName, command);
                         groupData.options.push(command.metadata.toJSON());

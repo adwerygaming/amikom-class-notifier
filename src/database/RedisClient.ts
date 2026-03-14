@@ -1,10 +1,11 @@
 import { Redis } from 'ioredis';
 import tags from '../utils/Tags.js';
+import { env } from '../utils/EnvManager.js';
 
 // Use environment variables for flexibility
 const redisClient = new Redis({
-    host: process.env.REDIS_HOST || 'acr-redis',
-    port: Number(process.env.REDIS_PORT) || 6379,
+    host: env.REDIS_HOST || 'acr-redis',
+    port: Number(env.REDIS_PORT) || 6379,
 });
 
 redisClient.on('connect', () => {

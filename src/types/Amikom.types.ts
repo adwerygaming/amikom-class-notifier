@@ -1,5 +1,7 @@
 import z from "zod"
 
+export const amikomLogoURL = "https://w7.pngwing.com/pngs/447/956/png-transparent-university-of-amikom-yogyakarta-yogyakarta-state-university-logo-id-miscellaneous-purple-text.png"
+
 export type ListHari = "SENIN" | "SELASA" | "RABU" | "KAMIS" | "JUMAT"
 
 /**
@@ -10,7 +12,7 @@ export interface ClassSchedule {
     IdHari: 0 | 1 | 2 | 3 | 4 | 5 | 6
 
     /** Class session */
-    IdJam: 1 | 2 | 3 | 4
+    IdJam: 1 | 2 | 3 | 4 | 5
 
     /** Matkul ID */
     IdKuliah: number
@@ -57,7 +59,7 @@ export interface ClassSchedule {
 
 export const classScheduleSchema: z.ZodType<ClassSchedule> = z.object({
     IdHari: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
-    IdJam: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+    IdJam: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
     IdKuliah: z.number(),
     Keterangan: z.string(),
     Hari: z.enum(["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT"]),

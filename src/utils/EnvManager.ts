@@ -14,6 +14,9 @@ const envSchema = z.object({
     DISCORD_CLIENT_ID: z.string().trim().min(1),
 
     PG_CONNECTION_STRING: z.string().trim().min(1),
+
+    REDIS_HOST: z.string().trim().min(1),
+    REDIS_PORT: z.string().trim().min(1)
 })
 
 const __filename = fileURLToPath(import.meta.url);
