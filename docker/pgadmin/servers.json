@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "acn-db": {
+      "Name": "acn-db",
+      "Group": "Servers",
+      "Host": "acn-db",
+      "Port": 5432,
+      "MaintenanceDB": "postgres",
+      "Username": "acn",
+      "SSLMode": "prefer"
+    }
+  }
+}
