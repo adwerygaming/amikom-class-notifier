@@ -2,7 +2,7 @@ import { Colors, EmbedBuilder, MessageCreateOptions, MessagePayload } from "disc
 import moment from "moment-timezone"
 import { Helper } from "../amikom/Helper.js"
 import { CheckReminderResponse } from "../amikom/Reminder.js"
-import { fetchAllGuilds } from "../amikom/Subscriptions.js"
+import { Subscriptions } from "../amikom/Subscriptions.js"
 import redisClient from "../database/RedisClient.js"
 import { ReminderEvent } from "../types/ACN.types.js"
 import { amikomLogoURL } from "../types/Amikom.types.js"
@@ -14,7 +14,7 @@ const helper = new Helper()
 
 export class Listener {
     async start(): Promise<void> {
-        const subsribedEvents = [
+        const subscribedEvents = [
             ReminderEvent.StartingNow,
             ReminderEvent.In5Minutes,
             ReminderEvent.In10Minutes,
@@ -23,10 +23,10 @@ export class Listener {
             ReminderEvent.In1Hour,
         ]
 
-        console.log(`[${tags.DiscordListener}] Subscribed to ${subsribedEvents.length} reminder events: ${subsribedEvents.join(", ")}`)
+        console.log(`[${tags.DiscordListener}] Subscribed to ${subscribedEvents.length} reminder events: ${subscribedEvents.join(", ")}`)
 
         await sub.subscribe(
-            ...subsribedEvents
+            ...subscribedEvents
         )
 
         // channel = ReminderEvent
@@ -50,64 +50,69 @@ export class Listener {
             const { start, end } = helper.resolveClassTime(now, schedule.Waktu)
             const duration = helper.formatDuration(end.diff(start, "minutes"))
 
-            if (channel === ReminderEvent.StartingNow) {
-                const startingNowEmbed = new EmbedBuilder()
-                    .setColor(Colors.Orange)
-                    .setTitle(`Class Starting Now`)
-                    .setDescription(`**${schedule.MataKuliah}** (_${schedule.Kode}_) is starting now.`)
-                    .setThumbnail(amikomLogoURL)
-                    .addFields(
-                        {
-                            name: "Lecturer",
-                            value: schedule.NamaDosen || "N/A",
-                            inline: true,
-                        },
-                        {
-                            name: "Time / Duration",
-                            value: `${start.format("HH:mm")} - ${end.format("HH:mm")} (${duration})`,
-                            inline: true,
-                        },
-                        {
-                            name: "Room",
-                            value: schedule.Ruang || "N/A",
-                            inline: true,
-                        }
-                    );
-                
-                await this.sendMessage({ embeds: [startingNowEmbed] })
-            } else {
-                const diffFromNow = start.diff(now, "minutes")
+            try {
+                if (channel === ReminderEvent.StartingNow) {
+                    const startingNowEmbed = new EmbedBuilder()
+                        .setColor(Colors.Orange)
+                        .setTitle(`Class Starting Now`)
+                        .setDescription(`**${schedule.MataKuliah}** (_${schedule.Kode}_) is starting now.`)
+                        .setThumbnail(amikomLogoURL)
+                        .addFields(
+                            {
+                                name: "Lecturer",
+                                value: schedule.NamaDosen || "N/A",
+                                inline: true,
+                            },
+                            {
+                                name: "Time / Duration",
+                                value: `${start.format("HH:mm")} - ${end.format("HH:mm")} (${duration})`,
+                                inline: true,
+                            },
+                            {
+                                name: "Room",
+                                value: schedule.Ruang || "N/A",
+                                inline: true,
+                            }
+                        );
 
-                const comingEmbed = new EmbedBuilder()
-                    .setColor(Colors.Orange)
-                    .setTitle(`Class in ${diffFromNow} minutes`)
-                    .setDescription(`**${schedule.MataKuliah}** (_${schedule.Kode}_) will start in **${diffFromNow} minutes**.`)
-                    .setThumbnail(amikomLogoURL)
-                    .addFields(
-                        {
-                            name: "Lecturer",
-                            value: schedule.NamaDosen || "N/A",
-                            inline: true,
-                        },
-                        {
-                            name: "Time / Duration",
-                            value: `${start.format("HH:mm")} - ${end.format("HH:mm")} (${duration})`,
-                            inline: true,
-                        },
-                        {
-                            name: "Room",
-                            value: schedule.Ruang || "N/A",
-                            inline: true,
-                        }
-                    );
+                    await this.sendMessage({ embeds: [startingNowEmbed] })
+                } else {
+                    const diffFromNow = start.diff(now, "minutes")
 
-                await this.sendMessage({ embeds: [comingEmbed] })
+                    const comingEmbed = new EmbedBuilder()
+                        .setColor(Colors.Orange)
+                        .setTitle(`Class in ${diffFromNow} minutes`)
+                        .setDescription(`**${schedule.MataKuliah}** (_${schedule.Kode}_) will start in **${diffFromNow} minutes**.`)
+                        .setThumbnail(amikomLogoURL)
+                        .addFields(
+                            {
+                                name: "Lecturer",
+                                value: schedule.NamaDosen || "N/A",
+                                inline: true,
+                            },
+                            {
+                                name: "Time / Duration",
+                                value: `${start.format("HH:mm")} - ${end.format("HH:mm")} (${duration})`,
+                                inline: true,
+                            },
+                            {
+                                name: "Room",
+                                value: schedule.Ruang || "N/A",
+                                inline: true,
+                            }
+                        );
+
+                    await this.sendMessage({ embeds: [comingEmbed] })
+                }
+            } catch (e) {
+                console.log(`[${tags.Error}] Failed to send reminder message:`)
+                console.error(e)
             }
         })
     }
 
     private async sendMessage(content: string | MessagePayload | MessageCreateOptions): Promise<void> {
-        const allGuilds = await fetchAllGuilds()
+        const allGuilds = await Subscriptions.fetchAllGuilds()
         const allDestinations = allGuilds.map(g => {
             return {
                 guild_id: g.guild_id,
@@ -130,8 +135,7 @@ export class Listener {
                     continue
                 }
 
-                const channels = await guild.channels.fetch()
-                const channel = channels.get(channelId)
+                const channel = guild.channels.cache.get(channelId)
 
                 if (!channel) {
                     console.error(`[${tags.Error}] Channel with ID ${channelId} not found in guild ${guild_id}.`)

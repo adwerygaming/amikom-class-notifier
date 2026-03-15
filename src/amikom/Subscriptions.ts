@@ -22,12 +22,6 @@ export class InvalidSubscriptionDataError extends Error {
     }
 }
 
-const db = DatabaseClient<SubscriptionSchema>("subscriptions")
-export async function fetchAllGuilds(): Promise<SubscriptionSchema[]> {
-    const res = await db.select("*")
-    return res
-}
-
 export class Subscriptions {
     constructor(
         private readonly guildId: string
@@ -35,6 +29,15 @@ export class Subscriptions {
 
     private db(): Knex.QueryBuilder<SubscriptionSchema, SubscriptionSchema[]> {
         return DatabaseClient<SubscriptionSchema>("subscriptions")
+    }
+
+    static db(): Knex.QueryBuilder<SubscriptionSchema, SubscriptionSchema[]> {
+        return DatabaseClient<SubscriptionSchema>("subscriptions")
+    }
+    
+    static async fetchAllGuilds(): Promise<SubscriptionSchema[]> {
+        const res = await this.db().select("*")
+        return res
     }
 
     async fetch(): Promise<SubscriptionSchema | null> {

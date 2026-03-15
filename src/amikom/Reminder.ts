@@ -17,7 +17,7 @@ interface ReminderConfig {
 }
 
 interface CheckConfig {
-    time: moment.Moment
+    debugTime?: moment.Moment
 }
 
 interface StateConfig {
@@ -58,14 +58,14 @@ export class Reminder {
 
         console.log(`[${tags.Reminder}] Reminder service started. Checking schedule every ${INTERVAL} seconds.`)
 
-        const time = debugTime || moment().tz("Asia/Jakarta")
+        // const time = debugTime || moment().tz("Asia/Jakarta")
         
-        setInterval(() => void this.check({ time }), INTERVAL * 1000)
+        setInterval(() => void this.check({ debugTime }), INTERVAL * 1000)
     }
 
-    private async check({ time }: CheckConfig): Promise<void> {
+    private async check({ debugTime }: CheckConfig): Promise<void> {
         try {
-            const now = time
+            const now = debugTime || moment().tz("Asia/Jakarta")
             const schedule = await amikom.readSchedule()
 
             console.log(`[${tags.Debug}] Right now is ${now.format("HH:mm:ss - dddd, DD MMM YYYY")}`)
@@ -124,7 +124,7 @@ export class Reminder {
                 // what? DRY? who cares?
 
                 const hasNotifyStartingNow = await this.getState(stateConfig)
-                if (diff <= 0 && !hasNotifyStartingNow) {
+                if (diff >= -5 && diff <= 0 && !hasNotifyStartingNow) {
                     console.log(`[${tags.Reminder}] Sending starting now reminder event.`)
                     await this.pub.publish(ReminderEvent.StartingNow, JSON.stringify(response))
                     await this.setState(stateConfig, true)
