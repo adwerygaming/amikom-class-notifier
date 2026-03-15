@@ -18,10 +18,10 @@ export default {
         try {
             const schedule = await amikom.readSchedule()
 
-            const now = moment().day(2).tz("Asia/Jakarta").locale("id")
+            const now = moment().tz("Asia/Jakarta").locale("id")
             const dateFormatted = now.format("dddd, DD MMMM YYYY")
 
-            const grouped = schedule.reduce<Record<string, typeof schedule>>( (acc, item) => {
+            const grouped = schedule.reduce<Record<string, typeof schedule>>((acc, item) => {
                 const key = item.Hari
                 acc[key] = acc[key] || []
                 acc[key].push(item)
@@ -129,7 +129,7 @@ export default {
             const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
-                    text => text.setContent("### Error")
+                    text => text.setContent("### Something went wrong")
                 )
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
