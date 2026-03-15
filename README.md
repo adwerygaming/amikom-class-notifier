@@ -26,11 +26,10 @@ If you are an **Amikom Student** enrolled in **2025** in **Sistem Informasi 04**
 After that, see [Subscribe to Reminders](#subscribe-to-reminders) section.
 
 #### Option 2: Self-Host (Recommended)
+For students in other majors, years, or classes, **self-hosting** is required. See the [Setup](#setup) section below.
 
 > [!CAUTION]
-> This project is NOT affiliated with Universitas Amikom Yogyakarta. You it at your own risk.
-
-For students in other majors, years, or classes, **self-hosting** is required. See the [Setup](#setup) section below.
+> This project is NOT affiliated with Universitas Amikom Yogyakarta. Use it at your own risk.
 
 ## How It Works
 
@@ -158,9 +157,6 @@ npm install
 
 # Run in development mode (with hot reload)
 npm run dev
-
-# Run tests
-npm test
 
 # Lint code
 npm run lint
