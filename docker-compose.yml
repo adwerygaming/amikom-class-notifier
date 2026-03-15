@@ -34,7 +34,7 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
     volumes:
-      - ./pgadmin/servers.json:/pgadmin4/servers.json
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
     networks:
       - acn-net
 
@@ -47,8 +47,8 @@ services:
       POSTGRES_USER: acn
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes: 
-      - ./db_data:/var/lib/postgresql/data
-      - ./init:/docker-entrypoint-initdb.d
+      - ./docker/db_data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d
     ports:
       - "${POSTGRES_PORT}:5432"
     networks:
