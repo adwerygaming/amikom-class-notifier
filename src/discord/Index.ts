@@ -4,11 +4,14 @@ import client from './Client.js';
 
 console.log(`[${tags.System}] Loaded Discord Index Script.`)
 
+// import moment from 'moment-timezone';
 import { Reminder } from '../amikom/Reminder.js';
 import { CommandHandler } from './CommandHandler.js';
+import { Listener } from './Listener.js';
 
 const commandHandler = new CommandHandler();
 
+const listener = new Listener()
 const reminder = new Reminder()
 
 client.on(Events.ClientReady, async (bot: Client) => {
@@ -30,10 +33,12 @@ client.on(Events.ClientReady, async (bot: Client) => {
   console.log(`[${tags.Discord}] Servers      : ${bot?.guilds.cache.size ?? '-'} Server${bot?.guilds?.cache?.size !== 1 ? 's' : ''}`);
   console.log('');
 
-  // await reminder.start({
-  //   intervalSeconds: 2,
-  //   debugTime: moment("05:00", "HH:mm").tz("Asia/Jakarta")
-  // })
+  await reminder.start({
+    intervalSeconds: 2,
+    // debugTime: moment("10:40", "HH:mm").day(1).tz("Asia/Jakarta")
+  })
+
+  await listener.start()
 });
 
 client.on(Events.InteractionCreate, async interaction => {

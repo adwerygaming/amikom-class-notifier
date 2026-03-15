@@ -14,6 +14,7 @@ const RawTags = {
   Database: { colors: ['#336791', '#003B57'] },
   Redis: { colors: ['#E74C3C', '#C0392B'] },
   Reminder: { colors: ['#9B59B6', '#8E44AD'] },
+  DiscordListener: { colors: ['#2980B9', '#2471A3'] },
 };
 
 type TagConfig = { colors: string[] };

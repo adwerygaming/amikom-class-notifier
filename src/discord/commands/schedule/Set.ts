@@ -103,6 +103,7 @@ export default {
                 timeout: 10000,
                 responseType: "text",
                 maxBodyLength: MAX_BYTES,
+                maxContentLength: MAX_BYTES
             })
 
             try {

@@ -22,6 +22,12 @@ export class InvalidSubscriptionDataError extends Error {
     }
 }
 
+const db = DatabaseClient<SubscriptionSchema>("subscriptions")
+export async function fetchAllGuilds(): Promise<SubscriptionSchema[]> {
+    const res = await db.select("*")
+    return res
+}
+
 export class Subscriptions {
     constructor(
         private readonly guildId: string

@@ -6,7 +6,7 @@ interface ResolveClassTimeResult {
 }
 
 export class Helper {
-    convertStringTimeToMoment(time: string): moment.Moment {
+    convertStringTimeToMoment(now: moment.Moment, time: string): moment.Moment {
         if (!time || !time.includes(":")) {
             throw new Error(`Invalid time format: ${time}. Expected format "HH:mm-HH:mm".`)
         }
@@ -17,19 +17,30 @@ export class Helper {
             throw new Error(`Invalid time values in: ${time}`)
         }
 
-        return moment().tz("Asia/Jakarta").set({ hour, minute, second: 0, millisecond: 0 })
+        return now.clone().set({ hour, minute, second: 0, millisecond: 0 })
     }
 
-    resolveClassTime(time: string): ResolveClassTimeResult {
+    resolveClassTime(now: moment.Moment, time: string): ResolveClassTimeResult {
         const [start, end] = time.split("-")
 
         return {
-            start: this.convertStringTimeToMoment(start),
-            end: this.convertStringTimeToMoment(end),
+            start: this.convertStringTimeToMoment(now, start),
+            end: this.convertStringTimeToMoment(now, end),
         }
     }
 
     getTodayDateKey(): string {
         return moment().tz("Asia/Jakarta").format("YYYY-MM-DD")
+    }
+
+    formatDuration(minutes: number): string {
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        const parts = [] as string[]
+
+        if (hours) parts.push(`${hours}h`)
+        if (mins) parts.push(`${mins}m`)
+
+        return parts.length ? parts.join(" ") : "0m"
     }
 }

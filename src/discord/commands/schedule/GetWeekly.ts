@@ -10,7 +10,7 @@ const helper = new Helper()
 
 export default {
     metadata: new SlashCommandBuilder()
-        .setName("week")
+        .setName("weekly")
         .setDescription("Get current schedule data in a week timeframe."),
     async execute(_client, interaction) {
         await interaction.deferReply()
@@ -50,17 +50,6 @@ export default {
                 JUMAT: 5,
             }
 
-            const formatDuration = (minutes: number): string => {
-                const hours = Math.floor(minutes / 60)
-                const mins = minutes % 60
-                const parts = [] as string[]
-
-                if (hours) parts.push(`${hours}h`)
-                if (mins) parts.push(`${mins}m`)
-
-                return parts.length ? parts.join(" ") : "0m"
-            }
-
             for (const day of dayOrder) {
                 const items = grouped[day]
                 if (!items?.length) continue
@@ -79,9 +68,9 @@ export default {
                 const classDisplays: string[] = []
 
                 for (const s of limited) {
-                    const { start: startTime, end: endTime } = helper.resolveClassTime(s.Waktu)
+                    const { start: startTime, end: endTime } = helper.resolveClassTime(now, s.Waktu)
                     const time = `${startTime.format("HH:mm")} - ${endTime.format("HH:mm")}`
-                    const duration = formatDuration(endTime.diff(startTime, "minutes"))
+                    const duration = helper.formatDuration(endTime.diff(startTime, "minutes"))
 
                     const classStart = baseDay.clone().set({
                         hour: startTime.hour(),
