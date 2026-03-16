@@ -55,7 +55,7 @@ export default {
             })
         }
 
-        // beaautify
+        // beautify
         major = helper.capitalizeWords(major.trim())
 
         if (entryYear < 2000) {

@@ -64,7 +64,7 @@ export default {
             const alreadySubscribedContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
-                    text => text.setContent(`**${targetChannel.id}** is already subscribed to schedule reminders for **${sch?.entry_year} ${sch?.major} ${sch?.class_number}**.`)
+                    text => text.setContent(`**<#${targetChannel.id}>** is already subscribed to schedule reminders for **${sch?.entry_year} ${sch?.major} ${sch?.class_number}**.`)
                 )
                 .addTextDisplayComponents(
                     text => text.setContent(`Please choose another channel if you want to subscribe to a different schedule.`)
@@ -143,7 +143,6 @@ export default {
         } catch {
             await interaction.editReply({
                 components: [timeoutContainer],
-                flags: [MessageFlags.IsComponentsV2],
             });
             return;
         }
@@ -185,7 +184,6 @@ export default {
         } catch {
             await interaction.editReply({
                 components: [timeoutContainer],
-                flags: [MessageFlags.IsComponentsV2],
             });
             return;
         }
@@ -226,7 +224,6 @@ export default {
         } catch {
             await interaction.editReply({
                 components: [timeoutContainer],
-                flags: [MessageFlags.IsComponentsV2],
             });
             return;
         }
@@ -264,7 +261,7 @@ export default {
                 const alreadyExistsContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
                     .addTextDisplayComponents(
-                        text => text.setContent(`**${targetChannel.id}** is already subscribed to a different schedule. Please choose another channel.`)
+                        text => text.setContent(`**<#${targetChannel.id}>** is already subscribed to a different schedule. Please choose another channel.`)
                     )
 
                 await step3.update({

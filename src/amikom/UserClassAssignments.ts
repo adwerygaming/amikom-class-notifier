@@ -31,27 +31,16 @@ export class UserClassAssignments {
     }
 
     async assign(scheduleId: string): Promise<UserClassAssignmentSchema> {
-        const existing = await this.fetch()
+        const [res] = await this.db()
+            .insert({
+                user_id: this.userId,
+                guild_id: this.guildId,
+                schedule_id: scheduleId
+            })
+            .onConflict(["user_id", "guild_id"])
+            .merge({ schedule_id: scheduleId })
+            .returning("*")
 
-        if (existing) {
-            const [res] = await this.db()
-                .where("id", existing.id)
-                .update({
-                    schedule_id: scheduleId
-                })
-                .returning("*")
-
-            return res
-        } else {
-            const [res] = await this.db()
-                .insert({
-                    user_id: this.userId,
-                    guild_id: this.guildId,
-                    schedule_id: scheduleId
-                })
-                .returning("*")
-
-            return res
-        }
+        return res
     }
 }

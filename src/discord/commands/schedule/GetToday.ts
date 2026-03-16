@@ -64,7 +64,7 @@ export default {
             if (!scheduleLookup) {
                 // possible case where there is no schedule data, across all guilds.
                 // bcs once a class schedule is registered, it can be used by any guild.
-                // maybe promt user to ask admin to add the schedule of their class here?
+                // maybe prompt user to ask admin to add the schedule of their class here?
 
                 const noScheduleDataContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)

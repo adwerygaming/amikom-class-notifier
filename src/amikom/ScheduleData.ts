@@ -9,7 +9,7 @@ type GetByIdProp = Pick<ScheduleDataSchema, "id">;
 
 type GetByInfoProp = Omit<ScheduleDataSchema, "id" | "created_at" | "last_modified" | "schedule">;
 
-type UpdateProp = Pick<ScheduleDataSchema, "class_number" | "major" | "entry_year" | "schedule"> & Pick<ScheduleDataSchema, "id">;
+type UpdateProp = Partial<Pick<ScheduleDataSchema, "class_number" | "major" | "entry_year" | "schedule">> & Pick<ScheduleDataSchema, "id">;
 
 type DeleteProp = Pick<ScheduleDataSchema, "id">;
 

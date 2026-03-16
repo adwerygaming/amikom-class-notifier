@@ -1,4 +1,4 @@
-import { ClassSchedule } from "./Amikom.types.js";
+import { type ClassSchedule } from "./Amikom.types.js";
 
 export interface BaseDatabaseSchema {
     id: string;
@@ -29,7 +29,7 @@ export interface ScheduleDataSchema extends BaseDatabaseSchema {
 }
 
 export interface SubscriptionWithScheduleData extends SubscriptionSchema {
-    schedule_data: ScheduleDataSchema
+    schedule_data: ScheduleDataSchema | null
 }
 
 export interface DatabaseTables {
