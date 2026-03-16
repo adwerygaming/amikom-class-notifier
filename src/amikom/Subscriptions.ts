@@ -14,7 +14,7 @@ export class DuplicateSubscriptionError extends Error {
 export class DuplicateScheduleSubscriptionError extends Error {
     constructor(guildId: string, scheduleId: string) {
         super(`Guild ${guildId} already registered this class (${scheduleId}) to other channel. A guild can only subscribe to one channel per schedule.`)
-        this.name = "DuplicateSubscriptionError"
+        this.name = "DuplicateScheduleSubscriptionError"
     }
 }
 
@@ -149,16 +149,17 @@ export class Subscriptions {
         }
     }
 
-    async unregister(): Promise<SubscriptionSchema | null> {
+    async unregister(id: string): Promise<SubscriptionSchema> {
         try {
             const [res] = await this.db()
-                .where("guild_id", this.guildId)
+                .where("id", id)
+                .andWhere("guild_id", this.guildId)
                 .del()
                 .returning("*")
 
-            return res ?? null
+            return res
         } catch (e) {
-            throw new Error(`Failed to unregister subscription for guild ${this.guildId}.`, { cause: e })
+            throw new Error(`Failed to unregister subscription for guild ${this.guildId} with ID ${id}.`, { cause: e })
         }
     }
 

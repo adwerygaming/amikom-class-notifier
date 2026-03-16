@@ -1,18 +1,12 @@
 import { ActionRowBuilder, Colors, ComponentType, ContainerBuilder, MessageFlags, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { ScheduleData } from "../../../amikom/ScheduleData.js";
 import { DuplicateSubscriptionError, InvalidSubscriptionDataError, Subscriptions } from "../../../amikom/Subscriptions.js";
-import { SlashCommandLayout } from "../../../types/Discord.types.js";
+import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 
 const scheduleData = new ScheduleData()
 
 const TIMEOUT = 60_000;
-
-interface UserFilterIteration {
-    user: {
-        id: string
-    }
-}
 
 export default {
     metadata: new SlashCommandBuilder()
@@ -74,7 +68,7 @@ export default {
                         text => text.setContent(`Please choose another channel if you want to subscribe to a different schedule.`)
                     )
 
-                await interaction.reply({
+                await interaction.editReply({
                     components: [alreadySubscribedContainer],
                     flags: [MessageFlags.IsComponentsV2],
                 });
@@ -97,7 +91,7 @@ export default {
                         text => text.setContent(`**I don't have any schedules data for any class yet.** Ask your admin to add schedule data using the \`/schedule set\` command first.`)
                     )
 
-                await interaction.reply({
+                await interaction.editReply({
                     components: [noSchedulesContainer],
                     flags: [MessageFlags.IsComponentsV2],
                 });
@@ -133,7 +127,7 @@ export default {
             const step1Row = new ActionRowBuilder<StringSelectMenuBuilder>()
                 .addComponents(majorSelect);
 
-            await interaction.reply({
+            await interaction.editReply({
                 content: `**Step 1/3** - Select major:`,
                 components: [step1Row],
             });

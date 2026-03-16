@@ -31,7 +31,7 @@ export default {
             const notSubscribedContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkPurple)
                 .addTextDisplayComponents(
-                    text => text.setContent(`**${interaction.guild?.name}** is currently **not subscribed** to schedule reminders.`)
+                    text => text.setContent(`**${interaction.guild?.name}** is currently **not subscribed** to any class schedule reminders.`)
                 )
 
             return await interaction.reply({
