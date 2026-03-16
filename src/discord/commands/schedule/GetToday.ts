@@ -5,6 +5,7 @@ import { ScheduleData } from "../../../amikom/ScheduleData.js"
 import { UserClassAssignments } from "../../../amikom/UserClassAssignments.js"
 import { amikomLogoURL, ListHari } from "../../../types/Amikom.types.js"
 import { SlashCommandLayout } from "../../../types/Discord.types.js"
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js"
 
 const scheduleData = new ScheduleData()
 const helper = new Helper()
@@ -15,17 +16,8 @@ export default {
         .setDescription("Get today's schedule."),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            const noGuildContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
-                )
-
-            return await interaction.reply({
-                components: [noGuildContainer],
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-            })
+            await HandleNoInteractionGuild(interaction)
+            return
         }
 
         await interaction.deferReply()

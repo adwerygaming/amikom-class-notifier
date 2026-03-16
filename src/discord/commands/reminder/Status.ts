@@ -3,6 +3,7 @@ import moment from "moment-timezone"
 import { Subscriptions } from "../../../amikom/Subscriptions.js"
 import { amikomLogoURL } from "../../../types/Amikom.types.js"
 import { SlashCommandLayout } from "../../../types/Discord.types.js"
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js"
 
 export default {
     metadata: new SlashCommandBuilder()
@@ -10,17 +11,8 @@ export default {
         .setDescription("Check your subscription status and channel for schedule reminders."),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            const noGuildContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
-                )
-
-            return await interaction.reply({
-                components: [noGuildContainer],
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-            })
+            await HandleNoInteractionGuild(interaction)
+            return
         }
 
         const guildId = interaction.guild.id

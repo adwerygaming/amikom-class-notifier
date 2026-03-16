@@ -2,6 +2,7 @@ import { Colors, ComponentType, ContainerBuilder, MessageFlags, PermissionFlagsB
 import { Subscriptions } from "../../../amikom/Subscriptions.js";
 import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 
 const TIMEOUT = 60_000;
 
@@ -11,17 +12,8 @@ export default {
         .setDescription("Unsubscribe from schedule reminders."),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            const noGuildContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
-            )
-
-            return await interaction.reply({
-                components: [noGuildContainer],
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-            })
+            await HandleNoInteractionGuild(interaction);
+            return
         }
 
         // Admin permission check
@@ -78,7 +70,7 @@ export default {
                 const channel = interaction.guild?.channels.cache.get(s.channel_id)
 
                 return {
-                    label: `${channel?.name} - ${sch?.entry_year} ${sch?.major} ${sch?.class_number}`,
+                    label: `${channel?.name ? `${channel.name} -` : ""} ${sch?.entry_year} ${sch?.major} ${sch?.class_number}`,
                     description: `Subscribed on ${new Date(s.created_at).toLocaleString()}`,
                     value: s.id,
                 } as SelectMenuComponentOptionData

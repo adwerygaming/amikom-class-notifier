@@ -3,6 +3,7 @@ import { ScheduleData } from "../../../amikom/ScheduleData.js";
 import { DuplicateSubscriptionError, InvalidSubscriptionDataError, Subscriptions } from "../../../amikom/Subscriptions.js";
 import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 
 const scheduleData = new ScheduleData()
 
@@ -19,17 +20,8 @@ export default {
         ),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            const noGuildContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
-                )
-
-            return await interaction.reply({
-                components: [noGuildContainer],
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-            })
+            await HandleNoInteractionGuild(interaction)
+            return
         }
 
         // Admin permission check

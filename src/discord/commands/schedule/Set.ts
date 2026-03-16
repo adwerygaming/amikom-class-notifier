@@ -3,10 +3,10 @@ import { Colors, ContainerBuilder, MessageFlags, PermissionFlagsBits, SlashComma
 import z from "zod";
 import { Helper } from "../../../amikom/Helper.js";
 import { ScheduleData } from "../../../amikom/ScheduleData.js";
-import { UserClassAssignments } from "../../../amikom/UserClassAssignments.js";
 import { classScheduleSchema, ListHari } from "../../../types/Amikom.types.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 
 const scheduleData = new ScheduleData()
 const helper = new Helper()
@@ -42,17 +42,8 @@ export default {
         const classNumber = interaction.options.getInteger("class_number", true)
 
         if (!interaction.guild) {
-            const noGuildContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
-                )
-
-            return await interaction.reply({
-                components: [noGuildContainer],
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-            })
+            await HandleNoInteractionGuild(interaction)
+            return
         }
 
         // beautify
@@ -90,6 +81,24 @@ export default {
 
             await interaction.reply({
                 components: [timeTravelerContainer],
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+            })
+            return
+        }
+
+        if (classNumber <= 0) {
+            const invalidClassContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkRed)
+                .addTextDisplayComponents(
+                    text => text.setContent("### Invalid Class Number")
+                )
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent("Class number must be a positive integer. Please check and try again.")
+                )
+
+            await interaction.reply({
+                components: [invalidClassContainer],
                 flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
             })
             return
@@ -224,26 +233,12 @@ export default {
                 return
             }
 
-            const schedule = await scheduleData.set({
+           await scheduleData.set({
                 major,
                 class_number: classNumber,
                 entry_year: entryYear,
                 schedule: data
             })
-
-            // auto assign executor
-            const userClassAssignments = new UserClassAssignments({
-                guildId: interaction.guild.id,
-                userId: interaction.user.id
-            })
-
-            try {
-                await userClassAssignments.assign(schedule.id)
-            } catch (e) {
-                console.error(`[${tags.Error}] Failed to assign ${interaction.user.username} to the schedule id ${schedule.id}.`)
-                console.error(e)
-            }
-
 
             // Preview: summary container + one container per day (compact)
             const grouped = data.reduce<Record<string, typeof data>>((acc, item) => {
