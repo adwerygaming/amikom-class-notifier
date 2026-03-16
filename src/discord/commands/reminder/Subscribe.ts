@@ -1,4 +1,4 @@
-import { ActionRowBuilder, Colors, ComponentType, ContainerBuilder, MessageFlags, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { Colors, ComponentType, ContainerBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { ScheduleData } from "../../../amikom/ScheduleData.js";
 import { DuplicateSubscriptionError, InvalidSubscriptionDataError, Subscriptions } from "../../../amikom/Subscriptions.js";
 import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
@@ -30,6 +30,25 @@ export default {
                 components: [noGuildContainer],
                 flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
             })
+        }
+
+        // Admin permission check
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+            const unauthorizedContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkRed)
+                .addTextDisplayComponents(
+                    text => text.setContent("### Unauthorized")
+                )
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent("You don't have permission to use this command. You need **Manage Server** permission to use this command.")
+                )
+
+            await interaction.reply({
+                components: [unauthorizedContainer],
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+            })
+            return
         }
 
         const targetChannel = interaction.options.getChannel("channel") ?? interaction.channel;
@@ -124,12 +143,22 @@ export default {
                 .addOptions(majorOptions)
                 .setMaxValues(1);
 
-            const step1Row = new ActionRowBuilder<StringSelectMenuBuilder>()
-                .addComponents(majorSelect);
+            const step1Container = new ContainerBuilder()
+                .setAccentColor(Colors.DarkPurple)
+                .addTextDisplayComponents(
+                    text => text.setContent(`-# Step 1 out of 3`)
+                )
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent(`Please **select your major.**`)
+                )
+                .addActionRowComponents(
+                    row => row.addComponents(majorSelect)
+                )
 
             await interaction.editReply({
-                content: `**Step 1/3** - Select major:`,
-                components: [step1Row],
+                components: [step1Container],
+                flags: [MessageFlags.IsComponentsV2],
             });
             const reply = await interaction.fetchReply();
 
@@ -166,12 +195,22 @@ export default {
                 .addOptions(yearsOptions)
                 .setMaxValues(1);
 
-            const step2Row = new ActionRowBuilder<StringSelectMenuBuilder>()
-                .addComponents(yearSelect);
+            const step2Container = new ContainerBuilder()
+                .setAccentColor(Colors.DarkPurple)
+                .addTextDisplayComponents(
+                    text => text.setContent(`-# Step 2 out of 3`)
+            )
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent(`Next, **select your enrolled year.**`)
+            )
+                .addActionRowComponents(
+                    row => row.addComponents(yearSelect)
+                )
 
             await step1.update({
-                content: `**Step 2/3** — Select enrolled year for **${chosenMajor}**:`,
-                components: [step2Row],
+                components: [step2Container],
+                flags: [MessageFlags.IsComponentsV2],
             });
 
             let step2;
@@ -196,7 +235,7 @@ export default {
             const classOptions = availableClasses.map(c => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(`Class ${c.class_number}`)
-                    .setValue(String(c.class_number))
+                    .setValue(`${chosenMajor} ${c.class_number}`)
                 return option
             })
 
@@ -206,12 +245,22 @@ export default {
                 .addOptions(classOptions)
                 .setMaxValues(1);
 
-            const step3Row = new ActionRowBuilder<StringSelectMenuBuilder>()
-                .addComponents(classSelect);
+            const step3Container = new ContainerBuilder()
+                .setAccentColor(Colors.DarkPurple)
+                .addTextDisplayComponents(
+                    text => text.setContent(`-# Step 3 out of 3`)
+                )
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent(`Last, **select your class number.**`)
+                )
+                .addActionRowComponents(
+                    row => row.addComponents(classSelect)
+                )
 
             await step2.update({
-                content: `**Step 3/3** — Select class for **${chosenYear}**, **${chosenMajor}**:`,
-                components: [step3Row],
+                components: [step3Container],
+                flags: [MessageFlags.IsComponentsV2],
             });
 
             let step3;
@@ -306,8 +355,15 @@ export default {
                 .addTextDisplayComponents(
                     text => text.setContent(`### Subscription successful!`)
                 )
+                .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent(`<#${targetChannel.id}> has been assigned as a class reminder for **${chosenYear} ${chosenMajor} ${chosenClass}**.`)
+                )
+                .addTextDisplayComponents(
+                    text => text.setContent(`I will start send reminders there from now on.`)
+                )
+                .addTextDisplayComponents(
+                    text => text.setContent(`-# Unsubscribe anytime by using the \`/unsubscribe\` command.`)
                 )
 
             await step3.update({

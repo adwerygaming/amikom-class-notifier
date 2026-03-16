@@ -95,6 +95,7 @@ export default {
             return
         }
 
+        // Admin permission check
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
             const unauthorizedContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)

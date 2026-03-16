@@ -157,6 +157,10 @@ export class Subscriptions {
                 .del()
                 .returning("*")
 
+            if (!res) {
+                throw new Error(`Subscription with ID ${id} couldn't be found for guild ${this.guildId}.`)
+            }
+
             return res
         } catch (e) {
             throw new Error(`Failed to unregister subscription for guild ${this.guildId} with ID ${id}.`, { cause: e })

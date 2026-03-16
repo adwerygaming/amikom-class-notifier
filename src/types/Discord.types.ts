@@ -28,7 +28,7 @@ export interface ModalLayout {
 }
 
 export interface UserFilterIteration {
-    user: {
-        id: string
-    }
+  user: {
+    id: string
+  }
 }
