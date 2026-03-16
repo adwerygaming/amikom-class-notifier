@@ -11,6 +11,13 @@ export class DuplicateSubscriptionError extends Error {
     }
 }
 
+export class DuplicateScheduleSubscriptionError extends Error {
+    constructor(guildId: string, scheduleId: string) {
+        super(`Guild ${guildId} already registered this class (${scheduleId}) to other channel. A guild can only subscribe to one channel per schedule.`)
+        this.name = "DuplicateSubscriptionError"
+    }
+}
+
 export class InvalidSubscriptionDataError extends Error {
     constructor(message: string) {
         super(message)
@@ -123,10 +130,16 @@ export class Subscriptions {
 
             return res
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             if (e.code === "23505") { // unique violation
-                throw new DuplicateSubscriptionError(this.guildId, channel_id)            
+                if (e.constraint === "subscriptions_guild_channel_unique") {
+                    throw new DuplicateSubscriptionError(this.guildId, channel_id)
+                }
+
+                if (e.constraint === "subscriptions_guild_schedule_unique") {
+                    throw new DuplicateScheduleSubscriptionError(this.guildId, schedule_id)
+                }
             } else if (e.code === "22P02") { // invalid text representation, likely due to mentions array not being in correct format
                 throw new InvalidSubscriptionDataError("Invalid data format for subscription. Please check your input.")
             }

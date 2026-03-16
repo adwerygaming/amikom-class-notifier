@@ -105,7 +105,7 @@ export class Listener {
                     await this.sendMessage({ embeds: [comingEmbed] })
                 }
             } catch (e) {
-                console.log(`[${tags.Error}] Failed to send reminder message:`)
+                console.error(`[${tags.Error}] Failed to send reminder message:`)
                 console.error(e)
             }
         })
@@ -148,7 +148,7 @@ export class Listener {
                 }
             }
         } catch (e) {
-            console.log(`[${tags.Error}] Failed to send reminder messages:`)
+            console.error(`[${tags.Error}] Failed to send reminder messages:`)
             console.error(e)
         }
     }

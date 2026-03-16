@@ -65,6 +65,8 @@ export class ScheduleData {
     }
 
     async update({ id, class_number, entry_year, major, schedule }: UpdateProp): Promise<ScheduleDataSchema | null> {
+        schedule = JSON.stringify(schedule) as unknown as ClassSchedule[]
+
         const [res] = await this.db()
             .where("id", id)
             .update({

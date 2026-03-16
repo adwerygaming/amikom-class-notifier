@@ -65,7 +65,7 @@ export class Reminder {
             try {
                 await this.check({ debugTime })
             } catch (e) {
-                console.log(`[${tags.Error}] Error occurred during schedule check:`, e)
+                console.error(`[${tags.Error}] Error occurred during schedule check:`, e)
             }
         }, INTERVAL * 1000)
     }

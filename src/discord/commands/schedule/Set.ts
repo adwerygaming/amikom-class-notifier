@@ -236,10 +236,16 @@ export default {
                 userId: interaction.user.id
             })
 
-            await userClassAssignments.assign(schedule.id)
+            try {
+                await userClassAssignments.assign(schedule.id)
+            } catch (e) {
+                console.error(`[${tags.Error}] Failed to assign ${interaction.user.username} to the schedule id ${schedule.id}.`)
+                console.error(e)
+            }
+
 
             // Preview: summary container + one container per day (compact)
-            const grouped = data.reduce<Record<string, typeof data>>( (acc, item) => {
+            const grouped = data.reduce<Record<string, typeof data>>((acc, item) => {
                 const key = item.Hari
                 acc[key] = acc[key] || []
                 acc[key].push(item)
@@ -289,7 +295,7 @@ export default {
                 flags: [MessageFlags.IsComponentsV2]
             })
         } catch (e) {
-            console.log(`[${tags.Error}] Failed to fetch or process the schedule file from the provided URL.`)
+            console.error(`[${tags.Error}] Failed to fetch or process the schedule file from the provided URL.`)
             console.error(e)
             
             const errorContainer = new ContainerBuilder()
