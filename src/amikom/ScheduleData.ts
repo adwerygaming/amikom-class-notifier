@@ -1,5 +1,6 @@
 import { Knex } from "knex";
 import DatabaseClient from "../database/Client.js";
+import { ClassSchedule } from "../types/Amikom.types.js";
 import { ScheduleDataSchema } from "../types/Database.types.js";
 
 type SetProp = Omit<ScheduleDataSchema, "id" | "created_at" | "last_modified">;
@@ -18,6 +19,8 @@ export class ScheduleData {
     }
 
     async set({ major, entry_year, class_number, schedule }: SetProp): Promise<ScheduleDataSchema> {
+        schedule = JSON.stringify(schedule) as unknown as ClassSchedule[]
+
         const [res] = await this.db()
             .insert({
                 major,

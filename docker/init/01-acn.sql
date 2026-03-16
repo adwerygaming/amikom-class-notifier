@@ -7,21 +7,20 @@ CREATE TABLE IF NOT EXISTS schedule_data (
     major TEXT NOT NULL,
     entry_year INTEGER NOT NULL,
     class_number INTEGER NOT NULL,
-    schedule JSONB NOT NULL
+    schedule JSONB NOT NULL,
 
-    CONSTRAINT schedule_data_unique_class UNIQUE (major, entry_year, class_number);
+    CONSTRAINT schedule_data_unique_class UNIQUE (major, entry_year, class_number)
 );
 
-
-CREATE TABLE user_class_assignments (
+CREATE TABLE IF NOT EXISTS user_class_assignments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_modified TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     user_id     TEXT NOT NULL,
     guild_id    TEXT NOT NULL,
-    schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE
+    schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE,
     
-    CONSTRAINT user_class_unique UNIQUE (user_id, guild_id);
+    CONSTRAINT user_class_unique UNIQUE (user_id, guild_id)
 );
 
 CREATE TABLE IF NOT EXISTS subscriptions (
@@ -35,7 +34,8 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     mentions JSONB DEFAULT '[]'::jsonb,
     schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE,
 
-   CONSTRAINT subscriptions_guild_channel_unique UNIQUE (guild_id, channel_id)
+    CONSTRAINT subscriptions_guild_channel_unique UNIQUE (guild_id, channel_id),
+    CONSTRAINT subscriptions_guild_schedule_unique UNIQUE (guild_id, schedule_id)
 );
 
 CREATE OR REPLACE FUNCTION update_modified_column()
@@ -53,6 +53,11 @@ CREATE TRIGGER update_subscriptions_modtime
 
 CREATE TRIGGER update_schedule_data_modtime
     BEFORE UPDATE ON schedule_data
+    FOR EACH ROW
+    EXECUTE FUNCTION update_modified_column();
+
+CREATE TRIGGER update_user_class_assignments_modtime
+    BEFORE UPDATE ON user_class_assignments
     FOR EACH ROW
     EXECUTE FUNCTION update_modified_column();
 

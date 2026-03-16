@@ -25,9 +25,9 @@ export default {
 
         const guildId = interaction.guild.id
         const subscriptions = new Subscriptions(guildId)
-        const existingSubscription = await subscriptions.fetch()
+        const existingSubscriptions = await subscriptions.fetch(true)
 
-        if (!existingSubscription) {
+        if (!existingSubscriptions || existingSubscriptions.length === 0) {
             const notSubscribedContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkPurple)
                 .addTextDisplayComponents(
@@ -40,32 +40,36 @@ export default {
             })
         }
 
-        const authorId = existingSubscription.author_id
-        const channelId = existingSubscription.channel_id
-        const createdAt = existingSubscription.created_at
-        const createdAtUnix = Math.floor(moment(createdAt).unix())
-        // const isActive = existingSubscription.is_active
+        // const isActive = existingSubscriptions.is_active
 
         const statusContainer = new ContainerBuilder()
             .setAccentColor(Colors.DarkPurple)
             .addSectionComponents(
                 sec => sec.addTextDisplayComponents(
-                    text => text.setContent(`### Class Schedule Reminder\n**${interaction.guild?.name}** has subscribed to schedule reminders.`)
+                    text => text.setContent(`### Class Schedule Reminder\n**${interaction.guild?.name}** has subscribed to ${existingSubscriptions.length} schedule reminders.`)
                 )
                     .setThumbnailAccessory(
                         img => img.setURL(interaction.guild?.iconURL() || amikomLogoURL)
                     )
             )
-            .addSeparatorComponents(sep => sep)
-            .addTextDisplayComponents(
-                text => text.setContent(`Channel: <#${channelId}>.`)
-            )
-            .addTextDisplayComponents(
-                text => text.setContent(`Subscribed by <@${authorId}>.`)
-            )
-            .addTextDisplayComponents(
-                text => text.setContent(`Subscribed <t:${createdAtUnix}:R>.`)
-            )
+
+        for (const sub of existingSubscriptions) {
+            const createdAtUnix = Math.floor(moment(sub.created_at).unix())
+
+            statusContainer.addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent(`### ${sub.schedule_data?.entry_year} ${sub.schedule_data?.major} ${sub.schedule_data?.class_number}`)
+                )
+                .addTextDisplayComponents(
+                    text => text.setContent(`Channel <#${sub.channel_id}>.`)
+                )
+                .addTextDisplayComponents(
+                    text => text.setContent(`Subscribed by <@${sub.user_id}>.`)
+                )
+                .addTextDisplayComponents(
+                    text => text.setContent(`Subscribed <t:${createdAtUnix}:R>.`)
+                )
+        }
 
         await interaction.reply({
             components: [statusContainer],

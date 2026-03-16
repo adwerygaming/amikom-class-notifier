@@ -28,6 +28,10 @@ export interface ScheduleDataSchema extends BaseDatabaseSchema {
     schedule: ClassSchedule[];
 }
 
+export interface SubscriptionWithScheduleData extends SubscriptionSchema {
+    schedule_data: ScheduleDataSchema
+}
+
 export interface DatabaseTables {
     subscriptions: SubscriptionSchema,
     schedule_data: ScheduleDataSchema,

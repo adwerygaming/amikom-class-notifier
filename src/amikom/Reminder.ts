@@ -26,8 +26,8 @@ interface UpdateConfig extends CheckConfig {
 
 interface StateConfig {
     event: ReminderEvent
-    classCode: string
-    classPeriod: number
+    classCode: ClassSchedule["Kelas"]
+    classPeriod: ClassSchedule["IdJam"]
 }
 
 export interface CheckReminderResponse {
@@ -61,10 +61,13 @@ export class Reminder {
         const INTERVAL = intervalSeconds || 5
 
         console.log(`[${tags.Reminder}] Reminder service started. Checking schedule every ${INTERVAL} seconds.`)
-
-        // const time = debugTime || moment().tz("Asia/Jakarta")
-        
-        setInterval(() => void this.check({ debugTime }), INTERVAL * 1000)
+        setInterval(async () => {
+            try {
+                await this.check({ debugTime })
+            } catch (e) {
+                console.log(`[${tags.Error}] Error occurred during schedule check:`, e)
+            }
+        }, INTERVAL * 1000)
     }
 
     private async check({ debugTime }: CheckConfig): Promise<void> {
@@ -119,7 +122,7 @@ export class Reminder {
                 const { start: startTime } = helper.resolveClassTime(now, schedule.Waktu)
                 const diff = startTime.diff(now, "minutes")
 
-                const classCode = schedule.Kode
+                const classCode = schedule.Kelas
                 const classPeriod = schedule.IdJam
                 
                 const stateConfig: StateConfig = {

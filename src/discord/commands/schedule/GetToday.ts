@@ -39,7 +39,22 @@ export default {
             const userClass = await userClassAssignments.fetch()
 
             if (!userClass) {
-                // setup class prompt
+                // TODO: setup class prompt
+                // to make it reuseable, use the command handler.
+                // but you might need to implement context manager
+
+                const noUserClassContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.DarkRed)
+                    .addTextDisplayComponents(text => text.setContent("### No class assigned"))
+                    .addSeparatorComponents(sep => sep)
+                    .addTextDisplayComponents(
+                        text => text.setContent("You haven't assigned your class yet. Please use the `/schedule set` command to assign your class schedule first.")
+                    )
+
+                await interaction.editReply({
+                    components: [noUserClassContainer],
+                    flags: [MessageFlags.IsComponentsV2],
+                })
                 return
             }
 
@@ -50,6 +65,19 @@ export default {
                 // possible case where there is no schedule data, across all guilds.
                 // bcs once a class schedule is registered, it can be used by any guild.
                 // maybe promt user to ask admin to add the schedule of their class here?
+
+                const noScheduleDataContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.DarkRed)
+                    .addTextDisplayComponents(text => text.setContent("### No schedule data"))
+                    .addSeparatorComponents(sep => sep)
+                    .addTextDisplayComponents(
+                        text => text.setContent("There is no schedule data found matching your assigned class. Please ask your server admin to set the schedule for your class using the `/schedule set` command.")
+                    )
+
+                await interaction.editReply({
+                    components: [noScheduleDataContainer],
+                    flags: [MessageFlags.IsComponentsV2],
+                })
                 return
             }
 

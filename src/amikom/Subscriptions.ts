@@ -1,12 +1,12 @@
 import { Knex } from "knex"
 import DatabaseClient from "../database/Client.js"
-import { SubscriptionSchema } from "../types/Database.types.js"
+import { SubscriptionSchema, SubscriptionWithScheduleData } from "../types/Database.types.js"
 
 type RegisterProp = Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified" | "is_active">
 
 export class DuplicateSubscriptionError extends Error {
-    constructor(guildId: string) {
-        super(`Guild ${guildId} is already registered.`)
+    constructor(guildId: string, channelId: string) {
+        super(`Channel ${channelId} on ${guildId} is already registered to other schedule.`)
         this.name = "DuplicateSubscriptionError"
     }
 }
@@ -36,15 +36,59 @@ export class Subscriptions {
         return res
     }
 
-    async fetch(): Promise<SubscriptionSchema[] | null> {
+    async fetch(withScheduleData: true): Promise<SubscriptionWithScheduleData[]>
+    async fetch(withScheduleData?: false): Promise<SubscriptionSchema[]>
+    async fetch(withScheduleData?: boolean): Promise<SubscriptionSchema[] | SubscriptionWithScheduleData[]> {
         try {
+            if (withScheduleData) {
+                const res = await this.db()
+                    .leftJoin("schedule_data", "subscriptions.schedule_id", "schedule_data.id")
+                    .where("guild_id", this.guildId)
+                    .select<SubscriptionWithScheduleData[]>(
+                        "subscriptions.*",
+                        DatabaseClient.raw("CASE WHEN schedule_data.id IS NULL THEN NULL ELSE to_jsonb(schedule_data) END as schedule_data"),
+                    )
+
+                return res
+            }
+
             const res = await this.db()
-                .select("*")
                 .where("guild_id", this.guildId)
+                .select<SubscriptionSchema[]>("*")
+
+            return res
+        } catch (e) {
+            throw new Error(`Failed to fetch subscriptions for guild ${this.guildId}.`, { cause: e })
+        }
+    }
+
+    async fetchByChannel(channelId: string, withScheduleData: true): Promise<SubscriptionWithScheduleData | null>
+    async fetchByChannel(channelId: string, withScheduleData?: false): Promise<SubscriptionSchema | null>
+    async fetchByChannel(channelId: string, withScheduleData?: boolean): Promise<SubscriptionSchema | SubscriptionWithScheduleData | null> {
+        try {
+            if (withScheduleData) {
+                const res = await this.db()
+                    .leftJoin("schedule_data", "subscriptions.schedule_id", "schedule_data.id")
+                    .where("guild_id", this.guildId)
+                    .andWhere("channel_id", channelId)
+                    .select<SubscriptionWithScheduleData>(
+                        "subscriptions.*",
+                        DatabaseClient.raw("CASE WHEN schedule_data.id IS NULL THEN NULL ELSE to_jsonb(schedule_data) END as schedule_data"),
+                    )
+                    .first()
+
+                return res ?? null
+            }
+
+            const res = await this.db()
+                .where("guild_id", this.guildId)
+                .andWhere("channel_id", channelId)
+                .select<SubscriptionSchema>("*")
+                .first()
 
             return res ?? null
         } catch (e) {
-            throw new Error(`Failed to fetch subscriptions for guild ${this.guildId}.`, { cause: e })
+            throw new Error(`Failed to fetch subscriptions for guild ${this.guildId} and channel ${channelId}.`, { cause: e })
         }
     }
 
@@ -82,7 +126,7 @@ export class Subscriptions {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             if (e.code === "23505") { // unique violation
-                throw new DuplicateSubscriptionError(this.guildId)            
+                throw new DuplicateSubscriptionError(this.guildId, channel_id)            
             } else if (e.code === "22P02") { // invalid text representation, likely due to mentions array not being in correct format
                 throw new InvalidSubscriptionDataError("Invalid data format for subscription. Please check your input.")
             }

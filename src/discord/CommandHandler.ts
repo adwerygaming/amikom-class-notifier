@@ -262,6 +262,10 @@ export class CommandHandler {
     private async handleDropdown(interaction: AnySelectMenuInteraction): Promise<void> {
         const [customId, originalUserId, ...rest] = interaction.customId.split('_');
 
+        if (interaction.customId.includes("cmdhdlrignore")) {
+            return
+        }
+
         console.log(`[${tags.Debug}] Interaction UserId: ${interaction.user.id}`)
         console.log(`[${tags.Debug}] Original UserId: ${originalUserId}`)
         console.log(`[${tags.Debug}] Same user? ${(interaction.user.id === originalUserId) ? "Yes" : "No"}`)
@@ -326,6 +330,10 @@ export class CommandHandler {
     private async handleButton(interaction: ButtonInteraction): Promise<void> {
         const [customId, originalUserId, ...rest] = interaction.customId.split('_');
 
+        if (interaction.customId.includes("cmdhdlrignore")) {
+            return
+        }
+
         if (interaction.user.id !== originalUserId) {
             const notTheirsContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
@@ -386,6 +394,10 @@ export class CommandHandler {
 
     private async handleModal(interaction: ModalSubmitInteraction): Promise<void> {
         const [customId, originalUserId, ...rest] = interaction.customId.split('_');
+
+        if (interaction.customId.includes("cmdhdlrignore")) {
+            return
+        }
 
         console.log(`[${tags.Debug}] Interaction UserId: ${interaction.user.id}`)
         console.log(`[${tags.Debug}] Original UserId: ${originalUserId}`)

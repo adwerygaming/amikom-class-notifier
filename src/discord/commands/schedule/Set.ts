@@ -3,6 +3,7 @@ import { Colors, ContainerBuilder, MessageFlags, PermissionFlagsBits, SlashComma
 import z from "zod";
 import { Helper } from "../../../amikom/Helper.js";
 import { ScheduleData } from "../../../amikom/ScheduleData.js";
+import { UserClassAssignments } from "../../../amikom/UserClassAssignments.js";
 import { classScheduleSchema, ListHari } from "../../../types/Amikom.types.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
@@ -40,6 +41,20 @@ export default {
         const entryYear = interaction.options.getInteger("entry_year", true)
         const classNumber = interaction.options.getInteger("class_number", true)
 
+        if (!interaction.guild) {
+            const noGuildContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkRed)
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
+                )
+
+            return await interaction.reply({
+                components: [noGuildContainer],
+                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+            })
+        }
+
         // beaautify
         major = helper.capitalizeWords(major.trim())
 
@@ -56,7 +71,7 @@ export default {
 
             await interaction.reply({
                 components: [uncContainer],
-                flags: [MessageFlags.IsComponentsV2],
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
             })
             return
         }
@@ -75,7 +90,7 @@ export default {
 
             await interaction.reply({
                 components: [timeTravelerContainer],
-                flags: [MessageFlags.IsComponentsV2],
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
             })
             return
         }
@@ -208,12 +223,20 @@ export default {
                 return
             }
 
-            await scheduleData.set({
+            const schedule = await scheduleData.set({
                 major,
                 class_number: classNumber,
                 entry_year: entryYear,
                 schedule: data
             })
+
+            // auto assign executor
+            const userClassAssignments = new UserClassAssignments({
+                guildId: interaction.guild.id,
+                userId: interaction.user.id
+            })
+
+            await userClassAssignments.assign(schedule.id)
 
             // Preview: summary container + one container per day (compact)
             const grouped = data.reduce<Record<string, typeof data>>( (acc, item) => {
