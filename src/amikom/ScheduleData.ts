@@ -53,6 +53,14 @@ export class ScheduleData {
         return res ?? null
     }
 
+    async getAll(): Promise<ScheduleDataSchema[]> {
+        const res = await this.db()
+            .select("*")
+            .orderBy(["major", "entry_year", "class_number"]);
+            
+        return res
+    }
+
     async update({ id, class_number, entry_year, major, schedule }: UpdateProp): Promise<ScheduleDataSchema | null> {
         const [res] = await this.db()
             .where("id", id)
@@ -68,11 +76,10 @@ export class ScheduleData {
     }
 
     async delete({ id }: DeleteProp): Promise<ScheduleDataSchema | null> {
-        const res = await this.db()
+        const [res] = await this.db()
             .where("id", id)
             .delete()
             .returning("*")
-            .first()
 
         return res ?? null
     }

@@ -7,20 +7,35 @@ CREATE TABLE IF NOT EXISTS schedule_data (
     major TEXT NOT NULL,
     entry_year INTEGER NOT NULL,
     class_number INTEGER NOT NULL,
-    schedule JSONB NOT NULL,
-    CONSTRAINT schedule_data_unique_class UNIQUE (major, entry_year, class_number)
+    schedule JSONB NOT NULL
+
+    CONSTRAINT schedule_data_unique_class UNIQUE (major, entry_year, class_number);
+);
+
+
+CREATE TABLE user_class_assignments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_modified TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    user_id     TEXT NOT NULL,
+    guild_id    TEXT NOT NULL,
+    schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE
+    
+    CONSTRAINT user_class_unique UNIQUE (user_id, guild_id);
 );
 
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_modified TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE,
-    guild_id TEXT UNIQUE NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    guild_id TEXT NOT NULL,
     channel_id TEXT NOT NULL,
-    author_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
     mentions JSONB DEFAULT '[]'::jsonb,
-    is_active BOOLEAN DEFAULT TRUE
+    schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE,
+
+   CONSTRAINT subscriptions_guild_channel_unique UNIQUE (guild_id, channel_id)
 );
 
 CREATE OR REPLACE FUNCTION update_modified_column()

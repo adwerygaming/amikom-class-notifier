@@ -5,10 +5,10 @@ import redisClient from "../database/RedisClient.js"
 import { ReminderEvent } from "../types/ACN.types.js"
 import { ClassSchedule } from "../types/Amikom.types.js"
 import tags from "../utils/Tags.js"
-import { Amikom } from "./Amikom.js"
 import { Helper } from "./Helper.js"
+import { ScheduleData } from "./ScheduleData.js"
 
-const amikom = new Amikom()
+const schedule = new ScheduleData()
 const helper = new Helper()
 
 interface ReminderConfig {
@@ -18,6 +18,10 @@ interface ReminderConfig {
 
 interface CheckConfig {
     debugTime?: moment.Moment
+}
+
+interface UpdateConfig extends CheckConfig {
+    schedule: ClassSchedule[]
 }
 
 interface StateConfig {
@@ -64,9 +68,17 @@ export class Reminder {
     }
 
     private async check({ debugTime }: CheckConfig): Promise<void> {
+        const allSchedules = await schedule.getAll()
+
+        for (const scheduleData of allSchedules) {
+            console.log(`[${tags.Debug}] Checking ${scheduleData.entry_year} ${scheduleData.major} ${scheduleData.class_number} schedule.`)
+            await this.update({ debugTime, schedule: scheduleData.schedule })
+        }
+    }
+
+    private async update({ debugTime, schedule }: UpdateConfig): Promise<void> {
         try {
             const now = debugTime || moment().tz("Asia/Jakarta")
-            const schedule = await amikom.readSchedule()
 
             console.log(`[${tags.Debug}] Right now is ${now.format("HH:mm:ss - dddd, DD MMM YYYY")}`)
 

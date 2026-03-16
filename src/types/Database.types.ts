@@ -10,19 +10,26 @@ export interface SubscriptionSchema extends BaseDatabaseSchema {
     schedule_id: string
     guild_id: string
     channel_id: string
-    author_id: string
+    user_id: string
     mentions: string[] | null
     is_active: boolean
+}
+
+export interface UserClassAssignmentSchema extends BaseDatabaseSchema {
+    user_id: string
+    guild_id: string
+    schedule_id: string
 }
 
 export interface ScheduleDataSchema extends BaseDatabaseSchema {
     major: string;
     entry_year: number;
-    class_number: string;
+    class_number: number;
     schedule: ClassSchedule[];
 }
 
 export interface DatabaseTables {
     subscriptions: SubscriptionSchema,
-    schedule_data: ScheduleDataSchema
+    schedule_data: ScheduleDataSchema,
+    user_class_assignments: UserClassAssignmentSchema
 }

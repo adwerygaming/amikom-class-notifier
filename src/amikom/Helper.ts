@@ -43,4 +43,10 @@ export class Helper {
 
         return parts.length ? parts.join(" ") : "0m"
     }
+
+    capitalizeWords(text: string): string {
+        return text.replace(/\b([A-Za-z])([A-Za-z]*)/g, (_match, first, rest) => {
+            return `${first.toUpperCase()}${rest.toLowerCase()}`
+        })
+    }
 }

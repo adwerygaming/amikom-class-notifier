@@ -1,17 +1,34 @@
 import axios from "axios";
 import { Colors, ContainerBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import z from "zod";
-import { Amikom } from "../../../amikom/Amikom.js";
-import { classScheduleSchema } from "../../../types/Amikom.types.js";
+import { Helper } from "../../../amikom/Helper.js";
+import { ScheduleData } from "../../../amikom/ScheduleData.js";
+import { classScheduleSchema, ListHari } from "../../../types/Amikom.types.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 
-const amikom = new Amikom()
+const scheduleData = new ScheduleData()
+const helper = new Helper()
 
 export default {
     metadata: new SlashCommandBuilder()
         .setName("set")
         .setDescription("Set schedule data.")
+        .addStringOption(option =>
+            option.setName('major') // TODO: make autocomplete system for this one
+                .setDescription('Your major (e.g., Sistem Informasi)')
+                .setRequired(true)
+        )
+        .addIntegerOption(option =>
+            option.setName('entry_year')
+                .setDescription('Your entry year (e.g., 2026)')
+                .setRequired(true)
+        )
+        .addIntegerOption(option =>
+            option.setName('class_number')
+                .setDescription('Your class number (e.g., 04)')
+                .setRequired(true)
+        )
         .addAttachmentOption(option =>
             option.setName('file')
                 .setDescription('Upload the schedule file (.json format recommended)')
@@ -19,6 +36,49 @@ export default {
     ),
     async execute(_client, interaction) {
         const file = interaction.options.getAttachment("file")
+        let major = interaction.options.getString("major", true)
+        const entryYear = interaction.options.getInteger("entry_year", true)
+        const classNumber = interaction.options.getInteger("class_number", true)
+
+        // beaautify
+        major = helper.capitalizeWords(major.trim())
+
+        if (entryYear < 2000) {
+            const uncContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkRed)
+                .addTextDisplayComponents(
+                    text => text.setContent("### Invalid Entry Year")
+                )
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent("The entry year you provided seems way too old to be valid. Please check and try again.")
+                )
+
+            await interaction.reply({
+                components: [uncContainer],
+                flags: [MessageFlags.IsComponentsV2],
+            })
+            return
+        }
+
+        const currentYear = new Date().getFullYear()
+        if (entryYear > currentYear) {
+            const timeTravelerContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkRed)
+                .addTextDisplayComponents(
+                    text => text.setContent("### Invalid Entry Year")
+                )
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent("The entry year you provided is in the future. Are you a time traveler? Please check and try again.")
+                )
+
+            await interaction.reply({
+                components: [timeTravelerContainer],
+                flags: [MessageFlags.IsComponentsV2],
+            })
+            return
+        }
 
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
             const unauthorizedContainer = new ContainerBuilder()
@@ -51,7 +111,7 @@ export default {
 
             await interaction.reply({
                 components: [errorContainer],
-                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+                flags: [MessageFlags.IsComponentsV2],
             })
             return
         }
@@ -70,7 +130,7 @@ export default {
 
             await interaction.reply({
                 components: [invalidTypeContainer],
-                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+                flags: [MessageFlags.IsComponentsV2],
             })
             return
         }
@@ -148,7 +208,12 @@ export default {
                 return
             }
 
-            await amikom.writeSchedule(JSON.stringify(data))
+            await scheduleData.set({
+                major,
+                class_number: classNumber,
+                entry_year: entryYear,
+                schedule: data
+            })
 
             // Preview: summary container + one container per day (compact)
             const grouped = data.reduce<Record<string, typeof data>>( (acc, item) => {
@@ -158,12 +223,15 @@ export default {
                 return acc
             }, {})
 
-            const dayOrder = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT"]
+            const dayOrder: ListHari[] = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT"]
             const summary = new ContainerBuilder()
                 .setAccentColor(Colors.Green)
                 .addTextDisplayComponents(text => text.setContent("### Schedule Updated"))
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(text => text.setContent("Schedule has been successfully updated! Here's a preview of the schedule:"))
+                .addTextDisplayComponents(
+                    text => text.setContent(`Major: **${major}**\nEntry Year: **${entryYear}**\nClass Number: **${classNumber}**`)
+                )
 
             const dayContainers: ContainerBuilder[] = []
             const PER_DAY_LIMIT = 5

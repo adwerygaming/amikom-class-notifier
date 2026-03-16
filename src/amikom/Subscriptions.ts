@@ -2,11 +2,7 @@ import { Knex } from "knex"
 import DatabaseClient from "../database/Client.js"
 import { SubscriptionSchema } from "../types/Database.types.js"
 
-interface RegisterProp {
-    channelId: string
-    userId: string
-    mentions?: string[]
-}
+type RegisterProp = Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified" | "is_active">
 
 export class DuplicateSubscriptionError extends Error {
     constructor(guildId: string) {
@@ -40,12 +36,11 @@ export class Subscriptions {
         return res
     }
 
-    async fetch(): Promise<SubscriptionSchema | null> {
+    async fetch(): Promise<SubscriptionSchema[] | null> {
         try {
             const res = await this.db()
                 .select("*")
                 .where("guild_id", this.guildId)
-                .first()
 
             return res ?? null
         } catch (e) {
@@ -70,13 +65,14 @@ export class Subscriptions {
         }
     }
 
-    async register({ channelId, userId, mentions }: RegisterProp): Promise<SubscriptionSchema> {
+    async register({ user_id, channel_id, schedule_id, mentions }: RegisterProp): Promise<SubscriptionSchema> {
         try {
             const [res] = await this.db()
                 .insert({
                     guild_id: this.guildId,
-                    channel_id: channelId,
-                    author_id: userId,
+                    schedule_id,
+                    channel_id,
+                    user_id,
                     mentions: mentions || []
                 })
                 .returning("*")

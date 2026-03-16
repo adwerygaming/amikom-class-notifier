@@ -1,11 +1,12 @@
 import { Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js"
 import moment from "moment-timezone"
-import { Amikom } from "../../../amikom/Amikom.js"
 import { Helper } from "../../../amikom/Helper.js"
+import { ScheduleData } from "../../../amikom/ScheduleData.js"
+import { UserClassAssignments } from "../../../amikom/UserClassAssignments.js"
 import { amikomLogoURL, ListHari } from "../../../types/Amikom.types.js"
 import { SlashCommandLayout } from "../../../types/Discord.types.js"
 
-const amikom = new Amikom()
+const scheduleData = new ScheduleData()
 const helper = new Helper()
 
 export default {
@@ -13,10 +14,47 @@ export default {
         .setName("today")
         .setDescription("Get today's schedule."),
     async execute(_client, interaction) {
+        if (!interaction.guild) {
+            const noGuildContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkRed)
+                .addSeparatorComponents(sep => sep)
+                .addTextDisplayComponents(
+                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
+                )
+
+            return await interaction.reply({
+                components: [noGuildContainer],
+                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+            })
+        }
+
         await interaction.deferReply()
 
+        const userClassAssignments = new UserClassAssignments({
+            guildId: interaction.guild.id,
+            userId: interaction.user.id
+        })
+
         try {
-            const schedule = await amikom.readSchedule()
+            const userClass = await userClassAssignments.fetch()
+
+            if (!userClass) {
+                // setup class prompt
+                return
+            }
+
+            const userScheduleId = userClass.schedule_id
+            const scheduleLookup = await scheduleData.getById({ id: userScheduleId })
+
+            if (!scheduleLookup) {
+                // possible case where there is no schedule data, across all guilds.
+                // bcs once a class schedule is registered, it can be used by any guild.
+                // maybe promt user to ask admin to add the schedule of their class here?
+                return
+            }
+
+            const schedule = scheduleLookup.schedule
+
             const now = moment().tz("Asia/Jakarta").locale("id")
             const isoDay = now.isoWeekday()
             const isoToDay: Record<number, ListHari> = {
