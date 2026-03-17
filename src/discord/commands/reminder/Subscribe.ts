@@ -201,7 +201,7 @@ export default {
             const classOptions = availableClasses.slice(0, 25).map(c => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(`Class ${c.class_number}`)
-                    .setValue(`${chosenMajor} ${c.class_number}`);
+                    .setValue(String(c.class_number));
                 return option;
             });
 
