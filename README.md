@@ -36,6 +36,7 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 > **Use at your own risk.** For official academic information, always refer to [Dashboard Mahasiswa](https://mhs.amikom.ac.id) or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1).
 
 ### Option 1: Use the Public Bot (Recommended)
+
 You can invite the bot to your server using this button below:
 
 <a href="https://discord.com/oauth2/authorize?client_id=942370077301436418">
@@ -45,6 +46,7 @@ You can invite the bot to your server using this button below:
 After that, see the [Subscribe to Reminders](#subscribe-to-reminders) section.
 
 ### Option 2: Self-Host
+
 If you want to build this project yourself, see the [Self Hosting](#self-hosting) section below.
 
 ## Usage
@@ -60,19 +62,19 @@ If you want to build this project yourself, see the [Self Hosting](#self-hosting
 7. Enter schedule information and upload the `schedule.json` file when prompted
 8. Verify the schedule preview appears
 
-#### Subscribe to Reminders
+### Subscribe to Reminders
 
 1. In your Discord server, choose a channel for notifications
 2. Run: `/reminder subscribe`
 3. The bot will ask you to input your **Major**, **Enrolled Year**, and **Class Number**.
 4. Done! You'll now receive class reminders
 
-#### Managing Reminders
+### Managing Reminders
 
 - **Unsubscribe:** `/reminder unsubscribe`
 - **Check status:** `/reminder status`
 
-#### Checking Schedules
+### Checking Schedules
 
 - **Today's Schedule:** `/schedule today`
 - **Weekly Schedule:** `/schedule weekly`
@@ -184,9 +186,11 @@ npm run lint
 ```
 
 ## Contributing
+
 Contributions are open to everyone. If you implement something cool and useful, open a PR and we'll discuss it there. ❤️
 
 ## Contact
+
 If you have any questions, feel free to reach out via links on my [GitHub profile](https://github.com/adwerygaming)
 
 <div align="center">
