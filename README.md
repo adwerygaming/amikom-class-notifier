@@ -17,23 +17,6 @@
 - **Class Reminders** — Get notified before class starts
 - **Self-hosted** — Full control over your data and deployment
 
-## Try It Yourself
-
-#### Option 1: Use the Public Bot (Recommended)
-You can invite the bot to your server using this button below:
-
-<a href="https://discord.com/oauth2/authorize?client_id=942370077301436418">
-    <img alt="Invite Bot" src="https://img.shields.io/badge/invite%20bot-bot?style=for-the-badge&logo=discord&logoColor=%237289da&color=%232c2f33">
-</a>
-
-After that, see [Subscribe to Reminders](#subscribe-to-reminders) section.
-
-#### Option 2: Self-Host
-For students in other majors, years, or classes, **self-hosting** is required. See the [Setup](#setup) section below.
-
-> [!CAUTION]
-> This project is NOT affiliated with Universitas Amikom Yogyakarta. Use it at your own risk.
-
 ## How It Works
 
 A Discord bot that automates class reminders by syncing schedule data with real-time events.
@@ -46,14 +29,70 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 | **Event Driven** | Redis Pub/Sub decouples the system; events are published when classes are imminent |
 | **Subscribers** | Redis subscribers query PostgreSQL for active guild subscriptions and send notifications to Discord channels |
 
-## Prerequisites
+## Try It Yourself
+
+> [!CAUTION]
+> This bot is not affiliated with, endorsed by, or officially connected to Universitas Amikom Yogyakarta. It is a community-built tool created by students, for students.
+> **Use at your own risk.** For official academic information, always refer to mhs.amikom.ac.id or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1)).
+
+#### Option 1: Use the Public Bot (Recommended)
+You can invite the bot to your server using this button below:
+
+<a href="https://discord.com/oauth2/authorize?client_id=942370077301436418">
+    <img alt="Invite Amibot" src="https://img.shields.io/badge/invite%20AmiBot-bot?style=for-the-badge&logo=discord&logoColor=%237289da&color=%232c2f33">
+</a>
+
+After that, see [Subscribe to Reminders](#subscribe-to-reminders) section.
+
+#### Option 2: Self-Host
+If you want to build this project by yourself, see the [Self Hosting](#self-hosting) section below.
+
+## Usages
+
+<details>
+<summary>
+<h4>Import Your Schedule</h4>
+</summary>
+
+1. Log in to [Dashboard Mahasiswa](https://mhs.amikom.ac.id)
+2. Once logged in, open this URL: `https://mhs.amikom.ac.id/api/perkuliahan/jadwal_kuliah_personal`
+3. You should see JSON data. If not, ensure you're using the same browser session
+4. Select all and copy the JSON (`Ctrl+A` then `Ctrl+C`)
+5. Paste into a text editor and save as `schedule.json`
+6. In your Discord server, run: `/schedule set`
+7. Upload the `schedule.json` file when prompted
+8. Verify the schedule preview appears
+
+</details>
+
+#### Subscribe to Reminders
+
+1. In your Discord server, choose a channel for notifications
+2. Run: `/reminder subscribe`
+3. The bot will ask you to input **Major**, **Enrolled Year** and **Class Number**.
+4. Done! You'll now receive class reminders
+
+#### Managing Reminders
+
+- **Unsubscribe:** `/reminder unsubscribe`
+- **Check status:** `/reminder status`
+
+#### Checking Schedules
+
+- **Today's Schedule:** `/schedule today`
+- **Weekly Schedule:** `/schedule weekly`
+
+
+## Self Hosting
+
+### Prerequisites
 
 - **Node.js** v21 or higher
 - **npm** v9 or higher
 - **Docker** & **Docker Compose** installed
 - **Git**
 
-## Requirements
+### Requirements
 
 - Discord account with server admin privileges
 - An Amikom account (NPM & password)
@@ -133,40 +172,6 @@ PG_CONNECTION_STRING=postgresql://postgres:your_secure_password_here@localhost:5
 > [!TIP]
 > Generate fast, secure passwords using [it-tools.tech/token-generator](https://it-tools.tech/token-generator)
 </details>
-
-<details>
-<summary><b>3. Import Your Schedule</b></summary>
-
-1. Log in to [Dashboard Mahasiswa](https://mhs.amikom.ac.id)
-2. Once logged in, open this URL: `https://mhs.amikom.ac.id/api/perkuliahan/jadwal_kuliah_personal`
-3. You should see JSON data. If not, ensure you're using the same browser session
-4. Select all and copy the JSON (`Ctrl+A` then `Ctrl+C`)
-5. Paste into a text editor and save as `schedule.json`
-6. In your Discord server, run: `/schedule set`
-7. Upload the `schedule.json` file when prompted
-8. Verify the schedule preview appears
-
-</details>
-
-## Usages
-
-#### Subscribe to Reminders
-
-1. In your Discord server, choose a channel for notifications
-2. Run: `/reminder subscribe`
-3. The bot will ask you to input **Major**, **Enrolled Year** and **Class Number**.
-4. Done! You'll now receive class reminders
-
-#### Managing Reminders
-
-- **Unsubscribe:** `/reminder unsubscribe`
-- **Check status:** `/reminder status`
-
-#### Checking Schedules
-
-- **Today's Schedule:** `/schedule today`
-- **Weekly Schedule:** `/schedule weekly`
-
 
 ## Development
 
