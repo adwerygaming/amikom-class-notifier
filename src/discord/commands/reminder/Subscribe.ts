@@ -5,6 +5,7 @@ import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.
 import tags from "../../../utils/Tags.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
+import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
 
 const scheduleData = new ScheduleData();
 
@@ -31,18 +32,27 @@ export default {
             return;
         }
 
-        const targetChannel = interaction.options.getChannel("channel") ?? interaction.channel;
-        if (!targetChannel) {
-            const noChannelContainer = new ContainerBuilder()
+        const channels = await interaction.guild.channels.fetch();
+        const targetChannelId = interaction?.options?.getChannel("channel")?.id ?? interaction?.channel?.id;
+        if (!targetChannelId) {
+            await HandleUnresolvableChannel(interaction);
+            return;
+        }
+
+        const targetChannel = await channels.get(targetChannelId);
+        const botMember = interaction.guild.members.me;
+
+        if (!botMember || !targetChannel?.permissionsFor(botMember)?.has(["ViewChannel", "SendMessages"])) {
+            const noPermsContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
-                    text => text.setContent(`**Couldn't resolve target channel.** Make sure the channel is valid and I have access to it.`)
+                    text => text.setContent(`**I don't have permission to send messages in <#${targetChannel?.id}>.** Please grant me \`View Channel\` and \`Send Messages\` permissions there.`)
                 );
 
             await interaction.reply({
-                components: [noChannelContainer],
-                flags: [MessageFlags.IsComponentsV2],
+                components: [noPermsContainer],
+                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
             });
             return;
         }
@@ -310,7 +320,7 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent(`<#${targetChannel.id}> has been assigned as a class reminder for **${chosenYear} ${chosenMajor} ${chosenClass}**.`)
-            )
+                )
                 .addTextDisplayComponents(
                     text => text.setContent(`I will start sending reminders there from now on.`)
                 )
