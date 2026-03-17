@@ -32,7 +32,7 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 ## Try It Yourself
 
 > [!CAUTION]
-> **This bot and project is not affiliated with, endorsed by, or officially connected to Universitas Amikom Yogyakarta**. It is a community-built tool created by students, for students.
+> **This bot and project are not affiliated with, endorsed by, or officially connected to Universitas Amikom Yogyakarta**. It is a community-built tool created by students, for students.
 > **Use at your own risk.** For official academic information, always refer to [Dashboard Mahasiswa](https://mhs.amikom.ac.id) or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1).
 
 ### Option 1: Use the Public Bot (Recommended)
@@ -170,7 +170,7 @@ PG_CONNECTION_STRING=postgresql://postgres:your_secure_password_here@localhost:5
 > Generate fast, secure passwords using [it-tools.tech/token-generator](https://it-tools.tech/token-generator)
 </details>
 
-After that, go to the [Importing Schedule Data](#importing-schedule-data) section to import your schedule and the [Managing Reminders](#managing-reminders) section to set up your reminders.
+After that, go to the [Importing Schedule Data](`#importing-schedule-data`) section to import your schedule and the [Subscribe to Reminders](`#subscribe-to-reminders`) section to set up your reminders.
 
 ## Development
 
