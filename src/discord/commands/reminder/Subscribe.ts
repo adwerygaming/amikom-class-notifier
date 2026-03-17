@@ -190,7 +190,6 @@ export default {
 
             await step1.update({
                 components: [step2Container],
-                flags: [MessageFlags.IsComponentsV2],
             });
 
             let step2;
@@ -240,7 +239,6 @@ export default {
 
             await step2.update({
                 components: [step3Container],
-                flags: [MessageFlags.IsComponentsV2],
             });
 
             let step3;
@@ -274,7 +272,6 @@ export default {
 
                 await step3.update({
                     components: [errorContainer],
-                    flags: [MessageFlags.IsComponentsV2],
                 });
                 return;
             }
@@ -296,7 +293,6 @@ export default {
 
                     await step3.update({
                         components: [alreadyExistsContainer],
-                        flags: [MessageFlags.IsComponentsV2],
                     });
                     return;
                 }
@@ -310,7 +306,6 @@ export default {
 
                     await step3.update({
                         components: [invalidDataContainer],
-                        flags: [MessageFlags.IsComponentsV2],
                     });
                     return;
                 }
@@ -325,7 +320,6 @@ export default {
 
                 await step3.update({
                     components: [genericErrorContainer],
-                    flags: [MessageFlags.IsComponentsV2],
                 });
                 return;
             }
@@ -338,7 +332,7 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent(`<#${targetChannel.id}> has been assigned as a class reminder for **${chosenYear} ${chosenMajor} ${chosenClass}**.`)
-                )
+            )
                 .addTextDisplayComponents(
                     text => text.setContent(`I will start sending reminders there from now on.`)
                 )
@@ -349,7 +343,6 @@ export default {
             await step3.update({
                 content: null,
                 components: [subscribedContainer],
-                flags: [MessageFlags.IsComponentsV2],
             });
 
         } catch (e) {

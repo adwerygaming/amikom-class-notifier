@@ -122,7 +122,6 @@ export default {
 
                 await selectionReply.update({
                     components: [notFoundContainer],
-                    flags: [MessageFlags.IsComponentsV2],
                 });
                 return;
             }
@@ -145,7 +144,6 @@ export default {
 
                 await selectionReply.update({
                     components: [successContainer],
-                    flags: [MessageFlags.IsComponentsV2],
                 });
             } catch (e) {
                 console.error(`[${tags.Error}] Failed to delete subscription:`);
@@ -160,7 +158,6 @@ export default {
 
                 await selectionReply.update({
                     components: [errorContainer],
-                    flags: [MessageFlags.IsComponentsV2],
                 });
                 return;
             }

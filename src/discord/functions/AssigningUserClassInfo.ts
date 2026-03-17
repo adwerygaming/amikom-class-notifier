@@ -132,7 +132,6 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
 
     await step1.update({
         components: [step2Container],
-        flags: [MessageFlags.IsComponentsV2],
     });
 
     let step2;
@@ -192,7 +191,6 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
 
     await step2.update({
         components: [step3Container],
-        flags: [MessageFlags.IsComponentsV2],
     });
 
     let step3;
@@ -225,7 +223,6 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
 
         await step3.update({
             components: [errorContainer],
-            flags: [MessageFlags.IsComponentsV2],
         });
         return null;
     }

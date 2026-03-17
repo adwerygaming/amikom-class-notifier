@@ -1,4 +1,4 @@
-import { Colors, EmbedBuilder, MessageCreateOptions, MessagePayload } from "discord.js";
+import { Colors, EmbedBuilder, MessageCreateOptions } from "discord.js";
 import moment from "moment-timezone";
 import { Helper } from "../amikom/Helper.js";
 import { CheckReminderResponse } from "../amikom/Reminder.js";
@@ -112,7 +112,7 @@ export class Listener {
         });
     }
 
-    private async sendMessage(scheduleId: string, content: string | MessagePayload | MessageCreateOptions): Promise<void> {
+    private async sendMessage(scheduleId: string, content: MessageCreateOptions): Promise<void> {
         const allGuilds = await Subscriptions.fetchByScheduleId(scheduleId);
         const allDestinations = allGuilds.map(g => {
             return {
@@ -129,6 +129,7 @@ export class Listener {
 
                 const guild_id = destination.guild_id;
                 const channelId = destination.channel_id;
+                const mentions = destination.mentions;
 
                 const guild = client.guilds.cache.get(guild_id);
                 if (!guild) {
@@ -145,7 +146,10 @@ export class Listener {
 
                 if (channel.isTextBased()) {
                     console.log(`[${tags.Reminder}] Sending ${channel} reminder to ${guild.name}`);
-                    await channel.send(content);
+                    await channel.send({
+                        content: mentions ? `${mentions.map((x) => `<@${x}>`).join(" ")}` : undefined,
+                        ...content
+                    });
                 }
             } catch (e) {
                 console.error(`[${tags.Error}] Failed to send reminder messages:`);

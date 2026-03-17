@@ -123,6 +123,7 @@ export class Subscriptions {
         try {
             const [res] = await this.db()
                 .where("id", id)
+                .andWhere("guild_id", this.guildId)
                 .update({
                     user_id,
                     schedule_id,
