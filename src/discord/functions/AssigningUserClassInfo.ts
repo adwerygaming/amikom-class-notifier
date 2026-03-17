@@ -34,6 +34,20 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
             text => text.setContent(`Too late. Please run the command again.`)
         );
 
+    if (majors.length === 0) {
+        const noMajorsContainer = new ContainerBuilder()
+            .setAccentColor(Colors.DarkRed)
+            .addTextDisplayComponents(
+                text => text.setContent(`**No schedule data available.** Please contact an admin.`)
+            );
+
+        await interaction.editReply({
+            components: [noMajorsContainer],
+            flags: [MessageFlags.IsComponentsV2],
+        });
+        return null;
+    }
+
     const majorOptions = majors.slice(0, 25).map(m => {
         const option = new StringSelectMenuOptionBuilder()
             .setLabel(m)
@@ -95,6 +109,19 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
         schedules.filter(c => c.major === chosenMajor).map(c => c.entry_year)
     )].sort((a, b) => b - a);
 
+    if (availableYears.length === 0) {
+        const noYearsContainer = new ContainerBuilder()
+            .setAccentColor(Colors.DarkRed)
+            .addTextDisplayComponents(
+                text => text.setContent(`**No available years found for the selected major.** Please contact an admin.`)
+            );
+
+        await step1.update({
+            components: [noYearsContainer],
+        });
+        return null;
+    }
+
     const yearsOptions = availableYears.slice(0, 25).map(y => {
         const option = new StringSelectMenuOptionBuilder()
             .setLabel(String(y))
@@ -153,6 +180,19 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
     const availableClasses = schedules.filter(
         c => c.major === chosenMajor && c.entry_year === chosenYear
     );
+
+    if (availableClasses.length === 0) {
+        const noClassesContainer = new ContainerBuilder()
+            .setAccentColor(Colors.DarkRed)
+            .addTextDisplayComponents(
+                text => text.setContent(`**No available classes found for the selected major and year.** Please contact an admin.`)
+            );
+
+        await step2.update({
+            components: [noClassesContainer],
+        });
+        return null;
+    }
 
     const classOptions = availableClasses.slice(0, 25).map(c => {
         const option = new StringSelectMenuOptionBuilder()
@@ -230,19 +270,19 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
     try {
         await userClassAssignments.assign(finalScheduleData.id);
 
-        const noUserClassContainer = new ContainerBuilder()
-            .setAccentColor(Colors.DarkRed)
+        const successContainer = new ContainerBuilder()
+            .setAccentColor(Colors.Green)
             .addTextDisplayComponents(text => text.setContent("### Class Assigned"))
             .addSeparatorComponents(sep => sep)
             .addTextDisplayComponents(
-                text => text.setContent(`You have assigned to **${finalScheduleData.major} ${finalScheduleData.entry_year} ${finalScheduleData.class_number}**.`)
+                text => text.setContent(`You have been assigned to **${finalScheduleData.major} ${finalScheduleData.entry_year} ${finalScheduleData.class_number}**.`)
             )
             .addTextDisplayComponents(
                 text => text.setContent(`Please re-run the command you intended to use.`)
             );
 
         await interaction.editReply({
-            components: [noUserClassContainer],
+            components: [successContainer],
             flags: [MessageFlags.IsComponentsV2],
         });
     } catch (e) {

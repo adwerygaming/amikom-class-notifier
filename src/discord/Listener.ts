@@ -46,7 +46,7 @@ export class Listener {
             const schedule = data.schedule.schedule;
             const scheduleId = data.schedule.id;
             // const nextSchedule = data.nextSchedule
-            
+
             try {
                 const now = moment().tz("Asia/Jakarta");
                 const { start, end } = helper.resolveClassTime(now, schedule.Waktu);
@@ -146,9 +146,17 @@ export class Listener {
 
                 if (channel.isTextBased()) {
                     console.log(`[${tags.Reminder}] Sending ${channel} reminder to ${guild.name}`);
+
+                    const mentionPrefix = mentions?.length
+                        ? mentions.map((x) => `<@${x}>`).join(" ")
+                        : "";
+                    const baseContent = content.content ?? "";
+
                     await channel.send({
-                        content: mentions ? `${mentions.map((x) => `<@${x}>`).join(" ")}` : undefined,
-                        ...content
+                        ...content,
+                        content: mentionPrefix
+                            ? [mentionPrefix, baseContent].filter(Boolean).join(" ")
+                            : (baseContent || undefined),
                     });
                 }
             } catch (e) {
