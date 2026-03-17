@@ -19,8 +19,8 @@
 
 ## Try It Yourself
 
-#### Option 1: Use the Public Bot
-If you are an **Amikom Student** enrolled in **2025** in **Sistem Informasi 04**, you can invite the bot to your server:
+#### Option 1: Use the Public Bot (Recommended)
+You can invite the bot to your server using this button below:
 
 <a href="https://discord.com/oauth2/authorize?client_id=942370077301436418">
     <img alt="Invite Bot" src="https://img.shields.io/badge/invite%20bot-bot?style=for-the-badge&logo=discord&logoColor=%237289da&color=%232c2f33">
@@ -28,7 +28,7 @@ If you are an **Amikom Student** enrolled in **2025** in **Sistem Informasi 04**
 
 After that, see [Subscribe to Reminders](#subscribe-to-reminders) section.
 
-#### Option 2: Self-Host (Recommended)
+#### Option 2: Self-Host
 For students in other majors, years, or classes, **self-hosting** is required. See the [Setup](#setup) section below.
 
 > [!CAUTION]
@@ -64,7 +64,8 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 > [!NOTE]
 > Follow these steps in order.
 
-### 1. Create a Discord Bot
+<details>
+<summary><b>1. Create a Discord Bot</b></summary>
 
 1. Navigate to the [Discord Developer Portal](https://discord.com/developers/applications)
 2. Log in with your Discord account
@@ -80,9 +81,12 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 12. Save changes and open the invite URL
 13. Select your server to add the bot
 
-**You'll need:** `DISCORD_CLIENT_ID` (Application ID) and `DISCORD_TOKEN` (Bot Token)
+> [!IMPORTANT]
+> **You'll need:** `DISCORD_CLIENT_ID` (Application ID) and `DISCORD_TOKEN` (Bot Token)
+</details>
 
-### 2. Deploy the Bot
+<details>
+<summary><b>2. Deploy the Bot</b></summary>
 
 ```
 # Clone the repository
@@ -128,8 +132,10 @@ PG_CONNECTION_STRING=postgresql://postgres:your_secure_password_here@localhost:5
 
 > [!TIP]
 > Generate fast, secure passwords using [it-tools.tech/token-generator](https://it-tools.tech/token-generator)
+</details>
 
-### 3. Import Your Schedule
+<details>
+<summary><b>3. Import Your Schedule</b></summary>
 
 1. Log in to [Dashboard Mahasiswa](https://mhs.amikom.ac.id)
 2. Once logged in, open this URL: `https://mhs.amikom.ac.id/api/perkuliahan/jadwal_kuliah_personal`
@@ -140,17 +146,27 @@ PG_CONNECTION_STRING=postgresql://postgres:your_secure_password_here@localhost:5
 7. Upload the `schedule.json` file when prompted
 8. Verify the schedule preview appears
 
+</details>
+
+## Usages
+
 #### Subscribe to Reminders
 
 1. In your Discord server, choose a channel for notifications
 2. Run: `/reminder subscribe`
-3. The bot will send a test message to confirm
+3. The bot will ask you to input **Major**, **Enrolled Year** and **Class Number**.
 4. Done! You'll now receive class reminders
 
 #### Managing Reminders
 
 - **Unsubscribe:** `/reminder unsubscribe`
 - **Check status:** `/reminder status`
+
+#### Checking Schedules
+
+- **Today's Schedule:** `/schedule today`
+- **Weekly Schedule:** `/schedule weekly`
+
 
 ## Development
 
