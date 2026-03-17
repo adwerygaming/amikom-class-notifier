@@ -33,7 +33,7 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 
 > [!CAUTION]
 > **This bot and project is not affiliated with, endorsed by, or officially connected to Universitas Amikom Yogyakarta**. It is a community-built tool created by students, for students.
-> **Use at your own risk.** For official academic information, always refer to [Dashboard Mahasiswa](https://mhs.amikom.ac.id) or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1)).
+> **Use at your own risk.** For official academic information, always refer to [Dashboard Mahasiswa](https://mhs.amikom.ac.id) or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1).
 
 #### Option 1: Use the Public Bot (Recommended)
 You can invite the bot to your server using this button below:
@@ -42,12 +42,12 @@ You can invite the bot to your server using this button below:
     <img alt="Invite Amibot" src="https://img.shields.io/badge/invite%20AmiBot-bot?style=for-the-badge&logo=discord&logoColor=%237289da&color=%232c2f33">
 </a>
 
-After that, see [Subscribe to Reminders](#subscribe-to-reminders) section.
+After that, see the [Subscribe to Reminders](#subscribe-to-reminders) section.
 
 #### Option 2: Self-Host
-If you want to build this project by yourself, see the [Self Hosting](#self-hosting) section below.
+If you want to build this project yourself, see the [Self Hosting](#self-hosting) section below.
 
-## Usages
+## Usage
 
 #### Importing Schedule Data
 
@@ -64,7 +64,7 @@ If you want to build this project by yourself, see the [Self Hosting](#self-host
 
 1. In your Discord server, choose a channel for notifications
 2. Run: `/reminder subscribe`
-3. The bot will ask you to input **Major**, **Enrolled Year** and **Class Number**.
+3. The bot will ask you to input your **Major**, **Enrolled Year**, and **Class Number**.
 4. Done! You'll now receive class reminders
 
 #### Managing Reminders
@@ -168,7 +168,7 @@ PG_CONNECTION_STRING=postgresql://postgres:your_secure_password_here@localhost:5
 > Generate fast, secure passwords using [it-tools.tech/token-generator](https://it-tools.tech/token-generator)
 </details>
 
-After that please go to [Importing Schedule Data](#importing-schedule-data) section to import your schedule and [Managing Reminders](#managing-reminders) section to set up your reminders.
+After that, go to the [Importing Schedule Data](#importing-schedule-data) section to import your schedule and the [Managing Reminders](#managing-reminders) section to set up your reminders.
 
 ## Development
 
@@ -184,7 +184,7 @@ npm run lint
 ```
 
 ## Contributing
-Contribution are open to everyone. If you implement something cool & useful, just open PR and we'll discuss there. ❤️
+Contributions are open to everyone. If you implement something cool and useful, open a PR and we'll discuss it there. ❤️
 
 ## Contact
 If you have any questions, feel free to reach out via links on my [GitHub profile](https://github.com/adwerygaming)
