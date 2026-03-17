@@ -2,7 +2,7 @@ import { Client, Events } from 'discord.js';
 import tags from '../utils/Tags.js';
 import client from './Client.js';
 
-console.log(`[${tags.System}] Loaded Discord Index Script.`)
+console.log(`[${tags.System}] Loaded Discord Index Script.`);
 
 // import moment from 'moment-timezone';
 import { Reminder } from '../amikom/Reminder.js';
@@ -11,8 +11,8 @@ import { Listener } from './Listener.js';
 
 const commandHandler = new CommandHandler();
 
-const listener = new Listener()
-const reminder = new Reminder()
+const listener = new Listener();
+const reminder = new Reminder();
 
 client.on(Events.ClientReady, async (bot: Client) => {
   // loads commands
@@ -36,9 +36,9 @@ client.on(Events.ClientReady, async (bot: Client) => {
   await reminder.start({
     intervalSeconds: 2,
     // debugTime: moment("10:40", "HH:mm").day(1).tz("Asia/Jakarta")
-  })
+  });
 
-  await listener.start()
+  await listener.start();
 });
 
 client.on(Events.InteractionCreate, async interaction => {

@@ -1,7 +1,11 @@
-import { ButtonBuilder, ButtonStyle, Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import { Colors, ComponentType, ContainerBuilder, MessageFlags, PermissionFlagsBits, SelectMenuComponentOptionData, SlashCommandBuilder, StringSelectMenuBuilder } from "discord.js";
 import { Subscriptions } from "../../../amikom/Subscriptions.js";
-import { SlashCommandLayout } from "../../../types/Discord.types.js";
+import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
+import tags from "../../../utils/Tags.js";
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
 
+const TIMEOUT = 60_000;
 
 export default {
     metadata: new SlashCommandBuilder()
@@ -9,62 +13,169 @@ export default {
         .setDescription("Unsubscribe from schedule reminders."),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            const noGuildContainer = new ContainerBuilder()
+            await HandleNoInteractionGuild(interaction);
+            return;
+        }
+
+        // Admin permission check
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+            await HandleUserNoPermissions(interaction, ["ManageGuild"]);
+            return;
+        }
+
+        const executorId = interaction.user.id;
+        const filter = (i: UserFilterIteration): boolean => i.user.id === executorId;
+        const timeoutContainer = new ContainerBuilder()
+            .setAccentColor(Colors.DarkRed)
+            .addSeparatorComponents(sep => sep)
+            .addTextDisplayComponents(
+                text => text.setContent(`Too late. Please run the command again.`)
+            );
+
+        await interaction.deferReply();
+
+        const subscriptions = new Subscriptions(interaction.guild.id);
+
+        try {
+            const guildSubscriptions = await subscriptions.fetch(true);
+
+            if (!guildSubscriptions || guildSubscriptions.length === 0) {
+                const notSubscribedContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.DarkPurple)
+                    .addTextDisplayComponents(
+                        text => text.setContent(`**${interaction.guild?.name}** is currently **not subscribed** to any class schedule reminders.`)
+                    );
+
+                return await interaction.editReply({
+                    components: [notSubscribedContainer],
+                    flags: [MessageFlags.IsComponentsV2],
+                });
+            }
+
+            // 25 is discord's max options for select menu
+            const options = guildSubscriptions?.slice(0, 25).map(s => {
+                const sch = s.schedule_data;
+                const channel = interaction.guild?.channels.cache.get(s.channel_id);
+                const scheduleLabel = sch
+                    ? `${sch.entry_year} ${sch.major} ${sch.class_number}`
+                    : "schedule unavailable";
+                const channelLabel = channel?.name ? `${channel?.name} -` : "";
+
+                return {
+                    label: `${channelLabel} ${scheduleLabel}`,
+                    description: `Subscribed on ${new Date(s.created_at).toLocaleString()}`,
+                    value: s.id,
+                } as SelectMenuComponentOptionData;
+            });
+
+            const menu = new StringSelectMenuBuilder()
+                .setCustomId("unsubscribe_menu_cmdhdlrignore")
+                .setPlaceholder("Select a subscription to unsubscribe")
+                .addOptions(options)
+                .setMaxValues(1)
+                .setMinValues(1);
+
+            const selectionContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkPurple)
+                .addTextDisplayComponents(
+                    text => text.setContent(`### Unsubscribe from Schedule Reminders`)
+                )
+                .addTextDisplayComponents(
+                    text => text.setContent(`Please select the subscription you want to unsubscribe from the dropdown menu below.`)
+                )
+                .addSeparatorComponents(sep => sep)
+                .addActionRowComponents(
+                    row => row.addComponents(menu)
+                );
+
+            await interaction.editReply({
+                components: [selectionContainer],
+                flags: [MessageFlags.IsComponentsV2],
+            });
+            const selectionInteraction = await interaction.fetchReply();
+
+            let selectionReply;
+            try {
+                selectionReply = await selectionInteraction.awaitMessageComponent({
+                    componentType: ComponentType.StringSelect,
+                    filter,
+                    time: TIMEOUT
+                });
+            } catch {
+                await interaction.editReply({
+                    components: [timeoutContainer],
+                    flags: [MessageFlags.IsComponentsV2],
+                });
+                return;
+            }
+
+            const selectionIntValue = selectionReply.values[0];
+            const selection = guildSubscriptions?.find(s => s.id === selectionIntValue);
+
+            if (!selection) {
+                const notFoundContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.DarkRed)
+                    .addSeparatorComponents(sep => sep)
+                    .addTextDisplayComponents(
+                        text => text.setContent(`**Selected subscription not found.** Already deleted? Please try again.`)
+                    );
+
+                await selectionReply.update({
+                    components: [notFoundContainer],
+                });
+                return;
+            }
+
+            try {
+                const res = await subscriptions.unregister(selection.id);
+
+                const successContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.Green)
+                    .addTextDisplayComponents(
+                        text => text.setContent(`### Subscription successfully deleted.`)
+                    )
+                    .addSeparatorComponents(sep => sep)
+                    .addTextDisplayComponents(
+                        text => text.setContent(`I will no longer send schedule reminders to <#${res.channel_id}>.`)
+                    )
+                    .addTextDisplayComponents(
+                        text => text.setContent(`-# Re-subscribe anytime by running the \`/subscribe\` command.`)
+                    );
+
+                await selectionReply.update({
+                    components: [successContainer],
+                });
+            } catch (e) {
+                console.error(`[${tags.Error}] Failed to delete subscription:`);
+                console.error(e);
+
+                const errorContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.DarkRed)
+                    .addSeparatorComponents(sep => sep)
+                    .addTextDisplayComponents(
+                        text => text.setContent(`Failed to unsubscribe from the selected schedule. Please try again.`)
+                    );
+
+                await selectionReply.update({
+                    components: [errorContainer],
+                });
+                return;
+            }
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to fetch subscriptions:`);
+            console.error(e);
+
+            const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
-                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
-                )
+                    text => text.setContent(`Failed to fetch subscriptions. Please try again later.`)
+                );
 
-            return await interaction.reply({
-                components: [noGuildContainer],
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-            })
-        }
-
-        const guildId = interaction.guild.id
-        const subscriptions = new Subscriptions(guildId)
-        const existingSubscription = await subscriptions.fetch()
-
-        if (!existingSubscription) {
-            const notSubscribedContainer = new ContainerBuilder()
-                .setAccentColor(Colors.Yellow)
-                .addTextDisplayComponents(
-                    text => text.setContent(`**${interaction.guild?.name}** is not subscribed to schedule reminders.`)
-                )
-
-            return await interaction.reply({
-                components: [notSubscribedContainer],
+            await interaction.editReply({
+                components: [errorContainer],
                 flags: [MessageFlags.IsComponentsV2],
-            })
+            });
         }
-
-        const yesBtn = new ButtonBuilder()
-            .setLabel("Yes, Unsubscribe")
-            .setStyle(ButtonStyle.Primary)
-            .setCustomId(`unsubscribe_${interaction.user.id}_confirm`)
-
-        const noBtn = new ButtonBuilder()
-            .setLabel("No, Keep us subscribed")
-            .setStyle(ButtonStyle.Secondary)
-            .setCustomId(`unsubscribe_${interaction.user.id}_cancel`)
-
-        const confirmContainer = new ContainerBuilder()
-            .setAccentColor(Colors.DarkPurple)
-            .addTextDisplayComponents(
-                text => text.setContent(`### Unsubscribe from Schedule Reminders?`)
-            )
-            .addSeparatorComponents(sep => sep)
-            .addTextDisplayComponents(
-                text => text.setContent(`Are you sure you want to unsubscribe **${interaction.guild?.name}** from schedule reminders?`)
-            )
-            .addActionRowComponents(
-                row => row.addComponents(yesBtn, noBtn)
-            )
-
-        await interaction.reply({
-            components: [confirmContainer],
-            flags: [MessageFlags.IsComponentsV2],
-        })
     }
-} as SlashCommandLayout
+} as SlashCommandLayout;

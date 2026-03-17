@@ -1,1 +1,1 @@
-import "./discord/Index.js"
+import "./discord/Index.js";

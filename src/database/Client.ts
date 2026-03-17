@@ -7,4 +7,4 @@ const DatabaseClient = Knex<DatabaseTables>({
   connection: env.PG_CONNECTION_STRING,
 });
 
-export default DatabaseClient
+export default DatabaseClient;

@@ -1,8 +1,10 @@
-import { Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js"
-import moment from "moment-timezone"
-import { Subscriptions } from "../../../amikom/Subscriptions.js"
-import { amikomLogoURL } from "../../../types/Amikom.types.js"
-import { SlashCommandLayout } from "../../../types/Discord.types.js"
+import { Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import moment from "moment-timezone";
+import { Subscriptions } from "../../../amikom/Subscriptions.js";
+import { amikomLogoURL } from "../../../types/Amikom.types.js";
+import { SlashCommandLayout } from "../../../types/Discord.types.js";
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import tags from "../../../utils/Tags.js";
 
 export default {
     metadata: new SlashCommandBuilder()
@@ -10,66 +12,87 @@ export default {
         .setDescription("Check your subscription status and channel for schedule reminders."),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            const noGuildContainer = new ContainerBuilder()
+            await HandleNoInteractionGuild(interaction);
+            return;
+        }
+
+        const guildId = interaction.guild.id;
+        const subscriptions = new Subscriptions(guildId);
+
+        try {
+            const existingSubscriptions = await subscriptions.fetch(true);
+
+            if (!existingSubscriptions || existingSubscriptions.length === 0) {
+                const notSubscribedContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.DarkPurple)
+                    .addTextDisplayComponents(
+                        text => text.setContent(`**${interaction.guild?.name}** is currently **not subscribed** to any class schedule reminders.`)
+                    );
+
+                return await interaction.reply({
+                    components: [notSubscribedContainer],
+                    flags: [MessageFlags.IsComponentsV2],
+                });
+            }
+
+            // const isActive = existingSubscriptions.is_active
+
+            const statusContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkPurple)
+                .addSectionComponents(
+                    sec => sec.addTextDisplayComponents(
+                        text => text.setContent(`### Class Schedule Reminder\n**${interaction.guild?.name}** has subscribed to ${existingSubscriptions.length} schedule reminders.`)
+                    )
+                        .setThumbnailAccessory(
+                            img => img.setURL(interaction.guild?.iconURL() || amikomLogoURL)
+                        )
+                );
+
+            for (const sub of existingSubscriptions) {
+                const createdAtUnix = Math.floor(moment(sub.created_at).unix());
+
+                const sch = sub.schedule_data;
+                const scheduleLabel = sch
+                    ? `${sch.entry_year} ${sch.major} ${sch.class_number}`
+                    : "(schedule data unavailable)";
+
+                statusContainer.addSeparatorComponents(sep => sep)
+                    .addTextDisplayComponents(
+                        text => text.setContent(`### ${scheduleLabel}`)
+                    )
+                    .addTextDisplayComponents(
+                        text => text.setContent(`Channel <#${sub.channel_id}>.`)
+                    )
+                    .addTextDisplayComponents(
+                        text => text.setContent(`Subscribed by <@${sub.user_id}>.`)
+                    )
+                    .addTextDisplayComponents(
+                        text => text.setContent(`Subscribed <t:${createdAtUnix}:R>.`)
+                    );
+            }
+
+            await interaction.reply({
+                components: [statusContainer],
+                flags: [MessageFlags.IsComponentsV2],
+            });
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to fetch subscription status for guild ${guildId}:`);
+            console.error(e);
+
+            const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
+                .addTextDisplayComponents(
+                    text => text.setContent("### Something went wrong")
+                )
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
-                    text => text.setContent(`This command can only be used in a server. Please use this command in a server to subscribe to schedule reminders.`)
-                )
+                    text => text.setContent("Failed to fetch subscription status. Please try again later.")
+                );
 
-            return await interaction.reply({
-                components: [noGuildContainer],
-                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-            })
-        }
-
-        const guildId = interaction.guild.id
-        const subscriptions = new Subscriptions(guildId)
-        const existingSubscription = await subscriptions.fetch()
-
-        if (!existingSubscription) {
-            const notSubscribedContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkPurple)
-                .addTextDisplayComponents(
-                    text => text.setContent(`**${interaction.guild?.name}** is currently **not subscribed** to schedule reminders.`)
-                )
-
-            return await interaction.reply({
-                components: [notSubscribedContainer],
+            await interaction.reply({
+                components: [errorContainer],
                 flags: [MessageFlags.IsComponentsV2],
-            })
+            });
         }
-
-        const authorId = existingSubscription.author_id
-        const channelId = existingSubscription.channel_id
-        const createdAt = existingSubscription.created_at
-        const createdAtUnix = Math.floor(moment(createdAt).unix())
-        // const isActive = existingSubscription.is_active
-
-        const statusContainer = new ContainerBuilder()
-            .setAccentColor(Colors.DarkPurple)
-            .addSectionComponents(
-                sec => sec.addTextDisplayComponents(
-                    text => text.setContent(`### Class Schedule Reminder\n**${interaction.guild?.name}** has subscribed to schedule reminders.`)
-                )
-                    .setThumbnailAccessory(
-                        img => img.setURL(interaction.guild?.iconURL() || amikomLogoURL)
-                    )
-            )
-            .addSeparatorComponents(sep => sep)
-            .addTextDisplayComponents(
-                text => text.setContent(`Channel: <#${channelId}>.`)
-            )
-            .addTextDisplayComponents(
-                text => text.setContent(`Subscribed by <@${authorId}>.`)
-            )
-            .addTextDisplayComponents(
-                text => text.setContent(`Subscribed <t:${createdAtUnix}:R>.`)
-            )
-
-        await interaction.reply({
-            components: [statusContainer],
-            flags: [MessageFlags.IsComponentsV2],
-        })
     }
-} as SlashCommandLayout
+} as SlashCommandLayout;

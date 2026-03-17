@@ -26,3 +26,9 @@ export interface ModalLayout {
   id: string;
   execute: (client: Client, interaction: ModalSubmitInteraction, data: string[]) => Promise<void>;
 }
+
+export interface UserFilterIteration {
+  user: {
+    id: string
+  }
+}

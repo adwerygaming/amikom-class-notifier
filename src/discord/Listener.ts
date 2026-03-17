@@ -1,16 +1,16 @@
-import { Colors, EmbedBuilder, MessageCreateOptions, MessagePayload } from "discord.js"
-import moment from "moment-timezone"
-import { Helper } from "../amikom/Helper.js"
-import { CheckReminderResponse } from "../amikom/Reminder.js"
-import { Subscriptions } from "../amikom/Subscriptions.js"
-import redisClient from "../database/RedisClient.js"
-import { ReminderEvent } from "../types/ACN.types.js"
-import { amikomLogoURL } from "../types/Amikom.types.js"
-import tags from "../utils/Tags.js"
-import client from "./Client.js"
+import { Colors, EmbedBuilder, MessageCreateOptions } from "discord.js";
+import moment from "moment-timezone";
+import { Helper } from "../amikom/Helper.js";
+import { CheckReminderResponse } from "../amikom/Reminder.js";
+import { Subscriptions } from "../amikom/Subscriptions.js";
+import redisClient from "../database/RedisClient.js";
+import { ReminderEvent } from "../types/ACN.types.js";
+import { amikomLogoURL } from "../types/Amikom.types.js";
+import tags from "../utils/Tags.js";
+import client from "./Client.js";
 
-const sub = redisClient.duplicate()
-const helper = new Helper()
+const sub = redisClient.duplicate();
+const helper = new Helper();
 
 export class Listener {
     async start(): Promise<void> {
@@ -21,36 +21,37 @@ export class Listener {
             ReminderEvent.In15Minutes,
             ReminderEvent.In30Minutes,
             ReminderEvent.In1Hour,
-        ]
+        ];
 
-        console.log(`[${tags.DiscordListener}] Subscribed to ${subscribedEvents.length} reminder events: ${subscribedEvents.join(", ")}`)
+        console.log(`[${tags.DiscordListener}] Subscribed to ${subscribedEvents.length} reminder events: ${subscribedEvents.join(", ")}`);
 
         await sub.subscribe(
             ...subscribedEvents
-        )
+        );
 
         // channel = ReminderEvent
         // message = CheckReminderResponse
         sub.on("message", async (channel: ReminderEvent, message: string) => {
-            console.log(`[${tags.DiscordListener}] Received reminder event ${channel}`)
+            console.log(`[${tags.DiscordListener}] Received reminder event ${channel}`);
             // parsing the content
-            let data: CheckReminderResponse
+            let data: CheckReminderResponse;
 
             try {
-                data = JSON.parse(message) as CheckReminderResponse
+                data = JSON.parse(message) as CheckReminderResponse;
             } catch (e) {
-                console.error(`[${channel}] Failed to parse message:`, e)
-                return
+                console.error(`[${channel}] Failed to parse message:`, e);
+                return;
             }
 
-            const schedule = data.schedule
+            const schedule = data.schedule.schedule;
+            const scheduleId = data.schedule.id;
             // const nextSchedule = data.nextSchedule
 
-            const now = moment().tz("Asia/Jakarta")
-            const { start, end } = helper.resolveClassTime(now, schedule.Waktu)
-            const duration = helper.formatDuration(end.diff(start, "minutes"))
-
             try {
+                const now = moment().tz("Asia/Jakarta");
+                const { start, end } = helper.resolveClassTime(now, schedule.Waktu);
+                const duration = helper.formatDuration(end.diff(start, "minutes"));
+
                 if (channel === ReminderEvent.StartingNow) {
                     const startingNowEmbed = new EmbedBuilder()
                         .setColor(Colors.Orange)
@@ -75,9 +76,9 @@ export class Listener {
                             }
                         );
 
-                    await this.sendMessage({ embeds: [startingNowEmbed] })
+                    await this.sendMessage(scheduleId, { embeds: [startingNowEmbed] });
                 } else {
-                    const diffFromNow = start.diff(now, "minutes")
+                    const diffFromNow = start.diff(now, "minutes");
 
                     const comingEmbed = new EmbedBuilder()
                         .setColor(Colors.Orange)
@@ -102,54 +103,66 @@ export class Listener {
                             }
                         );
 
-                    await this.sendMessage({ embeds: [comingEmbed] })
+                    await this.sendMessage(scheduleId, { embeds: [comingEmbed] });
                 }
             } catch (e) {
-                console.log(`[${tags.Error}] Failed to send reminder message:`)
-                console.error(e)
+                console.error(`[${tags.Error}] Failed to send reminder message:`);
+                console.error(e);
             }
-        })
+        });
     }
 
-    private async sendMessage(content: string | MessagePayload | MessageCreateOptions): Promise<void> {
-        const allGuilds = await Subscriptions.fetchAllGuilds()
+    private async sendMessage(scheduleId: string, content: MessageCreateOptions): Promise<void> {
+        const allGuilds = await Subscriptions.fetchByScheduleId(scheduleId);
         const allDestinations = allGuilds.map(g => {
             return {
                 guild_id: g.guild_id,
                 channel_id: g.channel_id,
                 is_active: g.is_active,
                 mentions: g.mentions,
-            }
-        })
+            };
+        });
 
-        try {
-            for (const destination of allDestinations) {
-                if (!destination.is_active) continue
+        for (const destination of allDestinations) {
+            try {
+                if (!destination.is_active) continue;
 
-                const guild_id = destination.guild_id
-                const channelId = destination.channel_id
+                const guild_id = destination.guild_id;
+                const channelId = destination.channel_id;
+                const mentions = destination.mentions;
 
-                const guild = client.guilds.cache.get(guild_id)
+                const guild = client.guilds.cache.get(guild_id);
                 if (!guild) {
-                    console.error(`[${tags.Error}] Guild with ID ${guild_id} not found in cache.`)
-                    continue
+                    console.error(`[${tags.Error}] Guild with ID ${guild_id} not found in cache.`);
+                    continue;
                 }
 
-                const channel = guild.channels.cache.get(channelId)
+                const channel = guild.channels.cache.get(channelId);
 
                 if (!channel) {
-                    console.error(`[${tags.Error}] Channel with ID ${channelId} not found in guild ${guild_id}.`)
-                    continue
+                    console.error(`[${tags.Error}] Channel with ID ${channelId} not found in guild ${guild_id}.`);
+                    continue;
                 }
 
                 if (channel.isTextBased()) {
-                    console.log(`[${tags.Reminder}] Sending ${channel} reminder to ${guild.name}`)
-                    await channel.send(content)
+                    console.log(`[${tags.Reminder}] Sending ${channel} reminder to ${guild.name}`);
+
+                    const mentionPrefix = mentions?.length
+                        ? mentions.map((x) => `<@${x}>`).join(" ")
+                        : "";
+                    const baseContent = content.content ?? "";
+
+                    await channel.send({
+                        ...content,
+                        content: mentionPrefix
+                            ? [mentionPrefix, baseContent].filter(Boolean).join(" ")
+                            : (baseContent || undefined),
+                    });
                 }
+            } catch (e) {
+                console.error(`[${tags.Error}] Failed to send reminder messages:`);
+                console.error(e);
             }
-        } catch (e) {
-            console.log(`[${tags.Error}] Failed to send reminder messages:`)
-            console.error(e)
         }
     }
 }
