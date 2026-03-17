@@ -1,6 +1,6 @@
 <div align="center">
     <h1>Amikom Class Notifier</h1>
-    <p>Get notified when class is starting via <a href="https://discord.com" target="_blank">Discord</a>!</p>
+    <p>Get notified when class is about to start via <a href="https://discord.com" target="_blank">Discord</a>!</p>
     <img alt="Discord" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white">
     <img alt="NodeJS" src="https://img.shields.io/badge/Node%20js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white">
     <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white">
@@ -32,8 +32,8 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 ## Try It Yourself
 
 > [!CAUTION]
-> This bot is not affiliated with, endorsed by, or officially connected to Universitas Amikom Yogyakarta. It is a community-built tool created by students, for students.
-> **Use at your own risk.** For official academic information, always refer to mhs.amikom.ac.id or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1)).
+> **This bot and project is not affiliated with, endorsed by, or officially connected to Universitas Amikom Yogyakarta**. It is a community-built tool created by students, for students.
+> **Use at your own risk.** For official academic information, always refer to [Dashboard Mahasiswa](https://mhs.amikom.ac.id) or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1)).
 
 #### Option 1: Use the Public Bot (Recommended)
 You can invite the bot to your server using this button below:
@@ -49,21 +49,16 @@ If you want to build this project by yourself, see the [Self Hosting](#self-host
 
 ## Usages
 
-<details>
-<summary>
-<h4>Import Your Schedule</h4>
-</summary>
+#### Importing Schedule Data
 
 1. Log in to [Dashboard Mahasiswa](https://mhs.amikom.ac.id)
-2. Once logged in, open this URL: `https://mhs.amikom.ac.id/api/perkuliahan/jadwal_kuliah_personal`
+2. Once logged in, open [this URL](https://mhs.amikom.ac.id/api/perkuliahan/jadwal_kuliah_personal)
 3. You should see JSON data. If not, ensure you're using the same browser session
 4. Select all and copy the JSON (`Ctrl+A` then `Ctrl+C`)
 5. Paste into a text editor and save as `schedule.json`
 6. In your Discord server, run: `/schedule set`
-7. Upload the `schedule.json` file when prompted
+7. Enter schedule information and upload the `schedule.json` file when prompted
 8. Verify the schedule preview appears
-
-</details>
 
 #### Subscribe to Reminders
 
@@ -173,6 +168,8 @@ PG_CONNECTION_STRING=postgresql://postgres:your_secure_password_here@localhost:5
 > Generate fast, secure passwords using [it-tools.tech/token-generator](https://it-tools.tech/token-generator)
 </details>
 
+After that please go to [Importing Schedule Data](#importing-schedule-data) section to import your schedule and [Managing Reminders](#managing-reminders) section to set up your reminders.
+
 ## Development
 
 ```
@@ -186,8 +183,11 @@ npm run dev
 npm run lint
 ```
 
-## Contibuting
+## Contributing
 Contribution are open to everyone. If you implement something cool & useful, just open PR and we'll discuss there. ❤️
+
+## Contact
+If you have any questions, feel free to reach out via links on my [GitHub profile](https://github.com/adwerygaming)
 
 <div align="center">
     <p>This project is not affiliated with Universitas Amikom Yogyakarta</p>
