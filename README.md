@@ -35,7 +35,7 @@ A Discord bot that automates class reminders by syncing schedule data with real-
 > **This bot and project is not affiliated with, endorsed by, or officially connected to Universitas Amikom Yogyakarta**. It is a community-built tool created by students, for students.
 > **Use at your own risk.** For official academic information, always refer to [Dashboard Mahasiswa](https://mhs.amikom.ac.id) or [AmikomOne App](https://play.google.com/store/apps/details?id=com.ic.projectabsensi&hl=id&pli=1).
 
-#### Option 1: Use the Public Bot (Recommended)
+### Option 1: Use the Public Bot (Recommended)
 You can invite the bot to your server using this button below:
 
 <a href="https://discord.com/oauth2/authorize?client_id=942370077301436418">
@@ -44,12 +44,12 @@ You can invite the bot to your server using this button below:
 
 After that, see the [Subscribe to Reminders](#subscribe-to-reminders) section.
 
-#### Option 2: Self-Host
+### Option 2: Self-Host
 If you want to build this project yourself, see the [Self Hosting](#self-hosting) section below.
 
 ## Usage
 
-#### Importing Schedule Data
+### Importing Schedule Data
 
 1. Log in to [Dashboard Mahasiswa](https://mhs.amikom.ac.id)
 2. Once logged in, open [this URL](https://mhs.amikom.ac.id/api/perkuliahan/jadwal_kuliah_personal)
@@ -78,7 +78,7 @@ If you want to build this project yourself, see the [Self Hosting](#self-hosting
 - **Weekly Schedule:** `/schedule weekly`
 
 
-## Self Hosting
+## Self-Hosting
 
 ### Prerequisites
 
