@@ -8,16 +8,16 @@ interface ConstructorProps {
 }
 
 export class UserClassAssignments {
-    private readonly userId: string
-    private readonly guildId: string
+    private readonly userId: string;
+    private readonly guildId: string;
 
     constructor({ guildId, userId }: ConstructorProps) {
-        this.userId = userId
-        this.guildId = guildId
+        this.userId = userId;
+        this.guildId = guildId;
     }
 
     private db(): Knex.QueryBuilder<UserClassAssignmentSchema, UserClassAssignmentSchema[]> {
-        return DatabaseClient<UserClassAssignmentSchema>("user_class_assignments")
+        return DatabaseClient<UserClassAssignmentSchema>("user_class_assignments");
     }
 
     async fetch(): Promise<UserClassAssignmentSchema | null> {
@@ -25,9 +25,9 @@ export class UserClassAssignments {
             .select("*")
             .where("user_id", this.userId)
             .andWhere("guild_id", this.guildId)
-            .first()
+            .first();
 
-        return res ?? null
+        return res ?? null;
     }
 
     async assign(scheduleId: string): Promise<UserClassAssignmentSchema> {
@@ -39,8 +39,8 @@ export class UserClassAssignments {
             })
             .onConflict(["user_id", "guild_id"])
             .merge({ schedule_id: scheduleId })
-            .returning("*")
+            .returning("*");
 
-        return res
+        return res;
     }
 }

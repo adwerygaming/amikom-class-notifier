@@ -4,8 +4,9 @@ import { DuplicateSubscriptionError, InvalidSubscriptionDataError, Subscriptions
 import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
 
-const scheduleData = new ScheduleData()
+const scheduleData = new ScheduleData();
 
 const TIMEOUT = 60_000;
 
@@ -20,27 +21,14 @@ export default {
         ),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            await HandleNoInteractionGuild(interaction)
-            return
+            await HandleNoInteractionGuild(interaction);
+            return;
         }
 
         // Admin permission check
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-            const unauthorizedContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addTextDisplayComponents(
-                    text => text.setContent("### Unauthorized")
-                )
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent("You don't have permission to use this command. You need **Manage Server** permission to use this command.")
-                )
-
-            await interaction.reply({
-                components: [unauthorizedContainer],
-                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-            })
-            return
+            await HandleUserNoPermissions(interaction, ["ManageGuild"]);
+            return;
         }
 
         const targetChannel = interaction.options.getChannel("channel") ?? interaction.channel;
@@ -50,7 +38,7 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent(`**Couldn't resolve target channel.** Make sure the channel is valid and I have access to it.`)
-                )
+                );
 
             await interaction.reply({
                 components: [noChannelContainer],
@@ -64,11 +52,11 @@ export default {
         const subscriptions = new Subscriptions(interaction.guild.id);
 
         try {
-            const existingSubscriptions = await subscriptions.fetch(true)
+            const existingSubscriptions = await subscriptions.fetch(true);
             const existingSubscription = existingSubscriptions.find(sub => sub.channel_id === targetChannel.id);
 
             if (existingSubscription) {
-                const sch = existingSubscription.schedule_data
+                const sch = existingSubscription.schedule_data;
 
                 const alreadySubscribedContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
@@ -77,13 +65,13 @@ export default {
                     )
                     .addTextDisplayComponents(
                         text => text.setContent(`Please choose another channel if you want to subscribe to a different schedule.`)
-                    )
+                    );
 
                 await interaction.editReply({
                     components: [alreadySubscribedContainer],
                     flags: [MessageFlags.IsComponentsV2],
                 });
-                return
+                return;
             }
 
             const userId = interaction.user.id;
@@ -100,7 +88,7 @@ export default {
                     .addSeparatorComponents(sep => sep)
                     .addTextDisplayComponents(
                         text => text.setContent(`**I don't have any schedules data for any class yet.** Ask your admin to add schedule data using the \`/schedule set\` command first.`)
-                    )
+                    );
 
                 await interaction.editReply({
                     components: [noSchedulesContainer],
@@ -114,7 +102,7 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent(`Too late. Please run the command again.`)
-                )
+                );
 
             // TODO: implement context manager and move this on each file for better reuse and readability.
 
@@ -125,8 +113,8 @@ export default {
             const majorOptions = availableMajors.slice(0, 25).map(m => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(m)
-                    .setValue(m)
-                return option
+                    .setValue(m);
+                return option;
             });
 
             const majorSelect = new StringSelectMenuBuilder()
@@ -146,7 +134,7 @@ export default {
                 )
                 .addActionRowComponents(
                     row => row.addComponents(majorSelect)
-                )
+                );
 
             await interaction.editReply({
                 components: [step1Container],
@@ -177,9 +165,9 @@ export default {
             const yearsOptions = availableYears.slice(0, 25).map(y => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(String(y))
-                    .setValue(String(y))
-                return option
-            })
+                    .setValue(String(y));
+                return option;
+            });
 
             const yearSelect = new StringSelectMenuBuilder()
                 .setCustomId("step_year_cmdhdlrignore")
@@ -198,7 +186,7 @@ export default {
             )
                 .addActionRowComponents(
                     row => row.addComponents(yearSelect)
-                )
+                );
 
             await step1.update({
                 components: [step2Container],
@@ -227,9 +215,9 @@ export default {
             const classOptions = availableClasses.slice(0, 25).map(c => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(`Class ${c.class_number}`)
-                    .setValue(`${chosenMajor} ${c.class_number}`)
-                return option
-            })
+                    .setValue(`${chosenMajor} ${c.class_number}`);
+                return option;
+            });
 
             const classSelect = new StringSelectMenuBuilder()
                 .setCustomId("step_class_cmdhdlrignore")
@@ -248,7 +236,7 @@ export default {
                 )
                 .addActionRowComponents(
                     row => row.addComponents(classSelect)
-                )
+                );
 
             await step2.update({
                 components: [step3Container],
@@ -282,7 +270,7 @@ export default {
                     .addSeparatorComponents(sep => sep)
                     .addTextDisplayComponents(
                         text => text.setContent(`**Couldn't find schedule data for the selected class.** Please try again or contact an admin.`)
-                    )
+                    );
 
                 await step3.update({
                     components: [errorContainer],
@@ -304,7 +292,7 @@ export default {
                         .setAccentColor(Colors.DarkRed)
                         .addTextDisplayComponents(
                             text => text.setContent(`**<#${targetChannel.id}>** is already subscribed to a different schedule. Please choose another channel.`)
-                        )
+                        );
 
                     await step3.update({
                         components: [alreadyExistsContainer],
@@ -318,7 +306,7 @@ export default {
                         .setAccentColor(Colors.DarkRed)
                         .addTextDisplayComponents(
                             text => text.setContent(`**Invalid subscription data.** Please try again or contact an admin.`)
-                        )
+                        );
 
                     await step3.update({
                         components: [invalidDataContainer],
@@ -333,7 +321,7 @@ export default {
                     .setAccentColor(Colors.DarkRed)
                     .addTextDisplayComponents(
                         text => text.setContent(`**An unexpected error occurred while subscribing.** Please try again or contact an admin.`)
-                    )
+                    );
 
                 await step3.update({
                     components: [genericErrorContainer],
@@ -352,11 +340,11 @@ export default {
                     text => text.setContent(`<#${targetChannel.id}> has been assigned as a class reminder for **${chosenYear} ${chosenMajor} ${chosenClass}**.`)
                 )
                 .addTextDisplayComponents(
-                    text => text.setContent(`I will start send reminders there from now on.`)
+                    text => text.setContent(`I will start sending reminders there from now on.`)
                 )
                 .addTextDisplayComponents(
                     text => text.setContent(`-# Unsubscribe anytime by using the \`/unsubscribe\` command.`)
-                )
+                );
 
             await step3.update({
                 content: null,
@@ -365,21 +353,21 @@ export default {
             });
 
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to fetch or process schedule data during subscription flow.`)
-            console.error(e)
+            console.error(`[${tags.Error}] Failed to fetch or process schedule data during subscription flow.`);
+            console.error(e);
 
             const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent(`**Failed to process schedule data.** Please try again later or contact an admin.`)
-                )
+                );
 
             await interaction.editReply({
                 components: [errorContainer],
                 flags: [MessageFlags.IsComponentsV2],
-            })
+            });
             return;
         }
     }
-} as SlashCommandLayout
+} as SlashCommandLayout;

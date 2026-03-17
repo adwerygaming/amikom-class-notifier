@@ -7,9 +7,10 @@ import { classScheduleSchema, ListHari } from "../../../types/Amikom.types.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
 
-const scheduleData = new ScheduleData()
-const helper = new Helper()
+const scheduleData = new ScheduleData();
+const helper = new Helper();
 
 export default {
     metadata: new SlashCommandBuilder()
@@ -36,18 +37,18 @@ export default {
                 .setRequired(true)
     ),
     async execute(_client, interaction) {
-        const file = interaction.options.getAttachment("file")
-        let major = interaction.options.getString("major", true)
-        const entryYear = interaction.options.getInteger("entry_year", true)
-        const classNumber = interaction.options.getInteger("class_number", true)
+        const file = interaction.options.getAttachment("file");
+        let major = interaction.options.getString("major", true);
+        const entryYear = interaction.options.getInteger("entry_year", true);
+        const classNumber = interaction.options.getInteger("class_number", true);
 
         if (!interaction.guild) {
-            await HandleNoInteractionGuild(interaction)
-            return
+            await HandleNoInteractionGuild(interaction);
+            return;
         }
 
         // beautify
-        major = helper.capitalizeWords(major.trim())
+        major = helper.capitalizeWords(major.trim());
 
         if (entryYear < 2000) {
             const uncContainer = new ContainerBuilder()
@@ -58,16 +59,16 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent("The entry year you provided seems way too old to be valid. Please check and try again.")
-                )
+                );
 
             await interaction.reply({
                 components: [uncContainer],
                 flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-            })
-            return
+            });
+            return;
         }
 
-        const currentYear = new Date().getFullYear()
+        const currentYear = new Date().getFullYear();
         if (entryYear > currentYear) {
             const timeTravelerContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
@@ -77,13 +78,13 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent("The entry year you provided is in the future. Are you a time traveler? Please check and try again.")
-                )
+                );
 
             await interaction.reply({
                 components: [timeTravelerContainer],
                 flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-            })
-            return
+            });
+            return;
         }
 
         if (classNumber <= 0) {
@@ -95,32 +96,19 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent("Class number must be a positive integer. Please check and try again.")
-                )
+                );
 
             await interaction.reply({
                 components: [invalidClassContainer],
                 flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-            })
-            return
+            });
+            return;
         }
 
         // Admin permission check
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-            const unauthorizedContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addTextDisplayComponents(
-                    text => text.setContent("### Unauthorized")
-                )
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent("You don't have permission to use this command. You need **Manage Server** permission to use this command.")
-                )
-
-            await interaction.reply({
-                components: [unauthorizedContainer],
-                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-            })
-            return
+            await HandleUserNoPermissions(interaction, [PermissionFlagsBits.ManageGuild]);
+            return;
         }
 
         if (!file) {
@@ -132,13 +120,13 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent("**No file attachment found.** Please upload the schedule file on option `file`.")
-                )
+                );
 
             await interaction.reply({
                 components: [errorContainer],
                 flags: [MessageFlags.IsComponentsV2],
-            })
-            return
+            });
+            return;
         }
 
         const ALLOWED_TYPES = ["application/json", "text/plain"];
@@ -151,13 +139,13 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent("The uploaded file type is not supported. Please upload a JSON file containing the schedule data.")
-                )
+                );
 
             await interaction.reply({
                 components: [invalidTypeContainer],
                 flags: [MessageFlags.IsComponentsV2],
-            })
-            return
+            });
+            return;
         }
 
         const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
@@ -170,29 +158,29 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent("The uploaded file is too large. Please upload a file smaller than 2 MB.")
-                )
+                );
 
             await interaction.reply({
                 components: [tooLargeContainer],
                 flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-            })
+            });
             return;
         }
 
-        await interaction.deferReply()
+        await interaction.deferReply();
 
         // TODO: look up for any security measures here
         try {
-            let rawSchedule: unknown
+            let rawSchedule: unknown;
             const res = await axios.get(file.url, {
                 timeout: 10000,
                 responseType: "text",
                 maxBodyLength: MAX_BYTES,
                 maxContentLength: MAX_BYTES
-            })
+            });
 
             try {
-                rawSchedule = JSON.parse(res.data)
+                rawSchedule = JSON.parse(res.data);
             } catch {
                 const notInShapeContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
@@ -202,20 +190,20 @@ export default {
                     .addSeparatorComponents(sep => sep)
                     .addTextDisplayComponents(
                         text => text.setContent("The uploaded file is not in valid JSON format. Please upload a valid JSON file.")
-                    )
+                    );
 
                 await interaction.editReply({
                     components: [notInShapeContainer],
                     flags: [MessageFlags.IsComponentsV2]
-                })
-                return
+                });
+                return;
             }
 
-            const scheduleSchema = z.array(classScheduleSchema)
-            const { success, data, error } = scheduleSchema.safeParse(rawSchedule)
+            const scheduleSchema = z.array(classScheduleSchema);
+            const { success, data, error } = scheduleSchema.safeParse(rawSchedule);
 
             if (!success) {
-                console.error(error)
+                console.error(error);
                 const invalidFormatContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
                     .addTextDisplayComponents(
@@ -224,13 +212,13 @@ export default {
                     .addSeparatorComponents(sep => sep)
                     .addTextDisplayComponents(
                         text => text.setContent("The schedule appears to be in an invalid format. Please check the file and try again.")
-                    )
+                    );
 
                 await interaction.editReply({
                     components: [invalidFormatContainer],
                     flags: [MessageFlags.IsComponentsV2]
-                })
-                return
+                });
+                return;
             }
 
            await scheduleData.set({
@@ -238,17 +226,17 @@ export default {
                 class_number: classNumber,
                 entry_year: entryYear,
                 schedule: data
-            })
+            });
 
             // Preview: summary container + one container per day (compact)
             const grouped = data.reduce<Record<string, typeof data>>((acc, item) => {
-                const key = item.Hari
-                acc[key] = acc[key] || []
-                acc[key].push(item)
-                return acc
-            }, {})
+                const key = item.Hari;
+                acc[key] = acc[key] || [];
+                acc[key].push(item);
+                return acc;
+            }, {});
 
-            const dayOrder: ListHari[] = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT"]
+            const dayOrder: ListHari[] = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT"];
             const summary = new ContainerBuilder()
                 .setAccentColor(Colors.Green)
                 .addTextDisplayComponents(text => text.setContent("### Schedule Updated"))
@@ -256,43 +244,43 @@ export default {
                 .addTextDisplayComponents(text => text.setContent("Schedule has been successfully updated! Here's a preview of the schedule:"))
                 .addTextDisplayComponents(
                     text => text.setContent(`Major: **${major}**\nEntry Year: **${entryYear}**\nClass Number: **${classNumber}**`)
-                )
+                );
 
-            const dayContainers: ContainerBuilder[] = []
-            const PER_DAY_LIMIT = 5
+            const dayContainers: ContainerBuilder[] = [];
+            const PER_DAY_LIMIT = 5;
 
             for (const day of dayOrder) {
-                const items = grouped[day]
-                if (!items?.length) continue
+                const items = grouped[day];
+                if (!items?.length) continue;
 
                 const cb = new ContainerBuilder()
                     .setAccentColor(Colors.Purple)
                     .addTextDisplayComponents(text => text.setContent(`**${day}**`))
-                    .addSeparatorComponents(sep => sep)
+                    .addSeparatorComponents(sep => sep);
 
-                const limited = items.slice(0, PER_DAY_LIMIT)
+                const limited = items.slice(0, PER_DAY_LIMIT);
                 for (const s of limited) {
-                    cb.addTextDisplayComponents(text => text.setContent(`> **${s.MataKuliah}**\n> _${s.NamaDosen}_\n> ${s.Waktu}\n> _${s.Ruang}_`))
+                    cb.addTextDisplayComponents(text => text.setContent(`> **${s.MataKuliah}**\n> _${s.NamaDosen}_\n> ${s.Waktu}\n> _${s.Ruang}_`));
                 }
 
                 if (items.length > PER_DAY_LIMIT) {
-                    cb.addTextDisplayComponents(text => text.setContent(`…and ${items.length - PER_DAY_LIMIT} more`))
+                    cb.addTextDisplayComponents(text => text.setContent(`…and ${items.length - PER_DAY_LIMIT} more`));
                 }
 
-                dayContainers.push(cb)
+                dayContainers.push(cb);
             }
 
             const components = dayContainers.length
                 ? [summary, ...dayContainers]
-                : [summary.addTextDisplayComponents(text => text.setContent("_No classes found in the schedule. If this seems wrong, please file an issue on GitHub._"))]
+                : [summary.addTextDisplayComponents(text => text.setContent("_No classes found in the schedule. If this seems wrong, please file an issue on GitHub._"))];
 
             await interaction.editReply({
                 components,
                 flags: [MessageFlags.IsComponentsV2]
-            })
+            });
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to fetch or process the schedule file from the provided URL.`)
-            console.error(e)
+            console.error(`[${tags.Error}] Failed to fetch or process the schedule file from the provided URL.`);
+            console.error(e);
             
             const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
@@ -302,12 +290,12 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent("Something went wrong while fetching or processing the schedule file. Please ensure the file is accessible and in the correct format, then try again.")
-                )
+                );
 
             await interaction.editReply({
                 components: [errorContainer],
                 flags: [MessageFlags.IsComponentsV2]
-            })
+            });
         }
     },
-} as SlashCommandLayout
+} as SlashCommandLayout;

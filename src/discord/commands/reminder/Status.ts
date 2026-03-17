@@ -1,9 +1,9 @@
-import { Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js"
-import moment from "moment-timezone"
-import { Subscriptions } from "../../../amikom/Subscriptions.js"
-import { amikomLogoURL } from "../../../types/Amikom.types.js"
-import { SlashCommandLayout } from "../../../types/Discord.types.js"
-import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js"
+import { Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import moment from "moment-timezone";
+import { Subscriptions } from "../../../amikom/Subscriptions.js";
+import { amikomLogoURL } from "../../../types/Amikom.types.js";
+import { SlashCommandLayout } from "../../../types/Discord.types.js";
+import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 
 export default {
     metadata: new SlashCommandBuilder()
@@ -11,25 +11,25 @@ export default {
         .setDescription("Check your subscription status and channel for schedule reminders."),
     async execute(_client, interaction) {
         if (!interaction.guild) {
-            await HandleNoInteractionGuild(interaction)
-            return
+            await HandleNoInteractionGuild(interaction);
+            return;
         }
 
-        const guildId = interaction.guild.id
-        const subscriptions = new Subscriptions(guildId)
-        const existingSubscriptions = await subscriptions.fetch(true)
+        const guildId = interaction.guild.id;
+        const subscriptions = new Subscriptions(guildId);
+        const existingSubscriptions = await subscriptions.fetch(true);
 
         if (!existingSubscriptions || existingSubscriptions.length === 0) {
             const notSubscribedContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkPurple)
                 .addTextDisplayComponents(
                     text => text.setContent(`**${interaction.guild?.name}** is currently **not subscribed** to any class schedule reminders.`)
-                )
+                );
 
             return await interaction.reply({
                 components: [notSubscribedContainer],
                 flags: [MessageFlags.IsComponentsV2],
-            })
+            });
         }
 
         // const isActive = existingSubscriptions.is_active
@@ -43,14 +43,19 @@ export default {
                     .setThumbnailAccessory(
                         img => img.setURL(interaction.guild?.iconURL() || amikomLogoURL)
                     )
-            )
+            );
 
         for (const sub of existingSubscriptions) {
-            const createdAtUnix = Math.floor(moment(sub.created_at).unix())
+            const createdAtUnix = Math.floor(moment(sub.created_at).unix());
+
+            const sch = sub.schedule_data;
+            const scheduleLabel = sch
+                ? `${sch.entry_year} ${sch.major} ${sch.class_number}`
+                : "(schedule data unavailable)";
 
             statusContainer.addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
-                    text => text.setContent(`### ${sub.schedule_data?.entry_year} ${sub.schedule_data?.major} ${sub.schedule_data?.class_number}`)
+                    text => text.setContent(`### ${scheduleLabel}`)
                 )
                 .addTextDisplayComponents(
                     text => text.setContent(`Channel <#${sub.channel_id}>.`)
@@ -60,12 +65,12 @@ export default {
                 )
                 .addTextDisplayComponents(
                     text => text.setContent(`Subscribed <t:${createdAtUnix}:R>.`)
-                )
+                );
         }
 
         await interaction.reply({
             components: [statusContainer],
             flags: [MessageFlags.IsComponentsV2],
-        })
+        });
     }
-} as SlashCommandLayout
+} as SlashCommandLayout;

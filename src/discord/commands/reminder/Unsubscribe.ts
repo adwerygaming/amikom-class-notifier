@@ -3,6 +3,7 @@ import { Subscriptions } from "../../../amikom/Subscriptions.js";
 import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
 
 const TIMEOUT = 60_000;
 
@@ -13,75 +14,62 @@ export default {
     async execute(_client, interaction) {
         if (!interaction.guild) {
             await HandleNoInteractionGuild(interaction);
-            return
+            return;
         }
 
         // Admin permission check
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-            const unauthorizedContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addTextDisplayComponents(
-                    text => text.setContent("### Unauthorized")
-                )
-                .addSeparatorComponents(sep => sep)
-                .addTextDisplayComponents(
-                    text => text.setContent("You don't have permission to use this command. You need **Manage Server** permission to use this command.")
-                )
-
-            await interaction.reply({
-                components: [unauthorizedContainer],
-                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-            })
-            return
+            await HandleUserNoPermissions(interaction, ["ManageGuild"]);
+            return;
         }
 
-        const executorId = interaction.user.id
+        const executorId = interaction.user.id;
         const filter = (i: UserFilterIteration): boolean => i.user.id === executorId;
         const timeoutContainer = new ContainerBuilder()
             .setAccentColor(Colors.DarkRed)
             .addSeparatorComponents(sep => sep)
             .addTextDisplayComponents(
                 text => text.setContent(`Too late. Please run the command again.`)
-            )
+            );
 
-        await interaction.deferReply()
+        await interaction.deferReply();
 
-        const subscriptions = new Subscriptions(interaction.guild.id)
+        const subscriptions = new Subscriptions(interaction.guild.id);
 
         try {
-            const guildSubscriptions = await subscriptions.fetch(true)
+            const guildSubscriptions = await subscriptions.fetch(true);
 
             if (!guildSubscriptions || guildSubscriptions.length === 0) {
                 const notSubscribedContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkPurple)
                     .addTextDisplayComponents(
                         text => text.setContent(`**${interaction.guild?.name}** is currently **not subscribed** to any class schedule reminders.`)
-                    )
+                    );
 
                 return await interaction.editReply({
                     components: [notSubscribedContainer],
                     flags: [MessageFlags.IsComponentsV2],
-                })
+                });
             }
 
             // 25 is discord's max options for select menu
             const options = guildSubscriptions?.slice(0, 25).map(s => {
-                const sch = s.schedule_data
-                const channel = interaction.guild?.channels.cache.get(s.channel_id)
+                const sch = s.schedule_data;
+                const channel = interaction.guild?.channels.cache.get(s.channel_id);
 
                 return {
                     label: `${channel?.name ? `${channel.name} -` : ""} ${sch?.entry_year} ${sch?.major} ${sch?.class_number}`,
                     description: `Subscribed on ${new Date(s.created_at).toLocaleString()}`,
                     value: s.id,
-                } as SelectMenuComponentOptionData
-            })
+                } as SelectMenuComponentOptionData;
+            });
 
             const menu = new StringSelectMenuBuilder()
                 .setCustomId("unsubscribe_menu_cmdhdlrignore")
                 .setPlaceholder("Select a subscription to unsubscribe")
                 .addOptions(options)
                 .setMaxValues(1)
-                .setMinValues(1)
+                .setMinValues(1);
 
             const selectionContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkPurple)
@@ -94,12 +82,12 @@ export default {
                 .addSeparatorComponents(sep => sep)
                 .addActionRowComponents(
                     row => row.addComponents(menu)
-                )
+                );
 
             await interaction.editReply({
                 components: [selectionContainer],
                 flags: [MessageFlags.IsComponentsV2],
-            })
+            });
             const selectionInteraction = await interaction.fetchReply();
 
             let selectionReply;
@@ -118,7 +106,7 @@ export default {
             }
 
             const selectionIntValue = selectionReply.values[0];
-            const selection = guildSubscriptions?.find(s => s.id === selectionIntValue)
+            const selection = guildSubscriptions?.find(s => s.id === selectionIntValue);
 
             if (!selection) {
                 const notFoundContainer = new ContainerBuilder()
@@ -126,7 +114,7 @@ export default {
                     .addSeparatorComponents(sep => sep)
                     .addTextDisplayComponents(
                         text => text.setContent(`**Selected subscription not found.** Already deleted? Please try again.`)
-                    )
+                    );
 
                 await selectionReply.update({
                     components: [notFoundContainer],
@@ -136,7 +124,7 @@ export default {
             }
 
             try {
-                const res = await subscriptions.unregister(selection.id)
+                const res = await subscriptions.unregister(selection.id);
 
                 const successContainer = new ContainerBuilder()
                     .setAccentColor(Colors.Green)
@@ -149,22 +137,22 @@ export default {
                     )
                     .addTextDisplayComponents(
                         text => text.setContent(`-# Re-subscribe anytime by running the \`/subscribe\` command.`)
-                    )
+                    );
 
                 await selectionReply.update({
                     components: [successContainer],
                     flags: [MessageFlags.IsComponentsV2],
                 });
             } catch (e) {
-                console.error(`[${tags.Error}] Failed to delete subscription:`)
-                console.error(e)
+                console.error(`[${tags.Error}] Failed to delete subscription:`);
+                console.error(e);
 
                 const errorContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
                     .addSeparatorComponents(sep => sep)
                     .addTextDisplayComponents(
                         text => text.setContent(`Failed to unsubscribe from the selected schedule. Please try again.`)
-                    )
+                    );
 
                 await selectionReply.update({
                     components: [errorContainer],
@@ -173,15 +161,15 @@ export default {
                 return;
             }
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to fetch subscriptions:`)
-            console.error(e)
+            console.error(`[${tags.Error}] Failed to fetch subscriptions:`);
+            console.error(e);
 
             const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addSeparatorComponents(sep => sep)
                 .addTextDisplayComponents(
                     text => text.setContent(`Failed to fetch subscriptions. Please try again later.`)
-                )
+                );
 
             await interaction.editReply({
                 components: [errorContainer],
@@ -189,4 +177,4 @@ export default {
             });
         }
     }
-} as SlashCommandLayout
+} as SlashCommandLayout;

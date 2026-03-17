@@ -1,6 +1,6 @@
-import z from "zod"
+import z from "zod";
 
-export const amikomLogoURL = "https://i.postimg.cc/8P5XGmgz/Logo-Gram.png"
+export const amikomLogoURL = "https://i.postimg.cc/8P5XGmgz/Logo-Gram.png";
 
 export type ListHari = "SENIN" | "SELASA" | "RABU" | "KAMIS" | "JUMAT"
 
@@ -74,4 +74,4 @@ export const classScheduleSchema: z.ZodType<ClassSchedule> = z.object({
     IsBolehPresensi: z.union([z.literal(0), z.literal(1)]),
     IsZoomURL: z.union([z.literal(0), z.literal(1)]),
     ZoomURL: z.string(),
-})
+});

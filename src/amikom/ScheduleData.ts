@@ -15,11 +15,11 @@ type DeleteProp = Pick<ScheduleDataSchema, "id">;
 
 export class ScheduleData {
     private db(): Knex.QueryBuilder<ScheduleDataSchema, ScheduleDataSchema[]> {
-        return DatabaseClient<ScheduleDataSchema>("schedule_data")
+        return DatabaseClient<ScheduleDataSchema>("schedule_data");
     }
 
     async set({ major, entry_year, class_number, schedule }: SetProp): Promise<ScheduleDataSchema> {
-        schedule = JSON.stringify(schedule) as unknown as ClassSchedule[]
+        schedule = JSON.stringify(schedule) as unknown as ClassSchedule[];
 
         const [res] = await this.db()
             .insert({
@@ -30,18 +30,18 @@ export class ScheduleData {
             })
             .onConflict(["major", "entry_year", "class_number"])
             .merge({ schedule })
-            .returning("*")
+            .returning("*");
 
-        return res
+        return res;
     }
 
     async getById({ id }: GetByIdProp): Promise<ScheduleDataSchema | null> {
         const res = await this.db()
             .select("*")
             .where("id", id)
-            .first()
+            .first();
 
-        return res ?? null
+        return res ?? null;
 
     }
 
@@ -51,9 +51,9 @@ export class ScheduleData {
             .where("major", major)
             .andWhere("entry_year", entry_year)
             .andWhere("class_number", class_number)
-            .first()
+            .first();
 
-        return res ?? null
+        return res ?? null;
     }
 
     async getAll(): Promise<ScheduleDataSchema[]> {
@@ -61,11 +61,11 @@ export class ScheduleData {
             .select("*")
             .orderBy(["major", "entry_year", "class_number"]);
             
-        return res
+        return res;
     }
 
     async update({ id, class_number, entry_year, major, schedule }: UpdateProp): Promise<ScheduleDataSchema | null> {
-        schedule = JSON.stringify(schedule) as unknown as ClassSchedule[]
+        schedule = JSON.stringify(schedule) as unknown as ClassSchedule[];
 
         const [res] = await this.db()
             .where("id", id)
@@ -75,17 +75,17 @@ export class ScheduleData {
                 major,
                 schedule
             })
-            .returning("*")
+            .returning("*");
 
-        return res ?? null
+        return res ?? null;
     }
 
     async delete({ id }: DeleteProp): Promise<ScheduleDataSchema | null> {
         const [res] = await this.db()
             .where("id", id)
             .delete()
-            .returning("*")
+            .returning("*");
 
-        return res ?? null
+        return res ?? null;
     }
 }
