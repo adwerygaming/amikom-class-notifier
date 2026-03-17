@@ -52,28 +52,6 @@ export default {
         const subscriptions = new Subscriptions(interaction.guild.id);
 
         try {
-            const existingSubscriptions = await subscriptions.fetch(true);
-            const existingSubscription = existingSubscriptions.find(sub => sub.channel_id === targetChannel.id);
-
-            if (existingSubscription) {
-                const sch = existingSubscription.schedule_data;
-
-                const alreadySubscribedContainer = new ContainerBuilder()
-                    .setAccentColor(Colors.DarkRed)
-                    .addTextDisplayComponents(
-                        text => text.setContent(`**<#${targetChannel.id}>** is already subscribed to schedule reminders for **${sch?.entry_year} ${sch?.major} ${sch?.class_number}**.`)
-                    )
-                    .addTextDisplayComponents(
-                        text => text.setContent(`Please choose another channel if you want to subscribe to a different schedule.`)
-                    );
-
-                await interaction.editReply({
-                    components: [alreadySubscribedContainer],
-                    flags: [MessageFlags.IsComponentsV2],
-                });
-                return;
-            }
-
             const userId = interaction.user.id;
 
             //! for check only executor can interact with the select menu

@@ -281,7 +281,7 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
                 text => text.setContent(`Please re-run the command you intended to use.`)
             );
 
-        await interaction.editReply({
+        await step3.update({
             components: [successContainer],
             flags: [MessageFlags.IsComponentsV2],
         });
@@ -295,7 +295,7 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
                 text => text.setContent(`**Failed to assign class.** Please try again or contact an admin.`)
             );
 
-        await interaction.editReply({
+        await step3.update({
             components: [errorContainer],
             flags: [MessageFlags.IsComponentsV2],
         });
