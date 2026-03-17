@@ -52,41 +52,41 @@ export function buildScheduleContainers(options: BuildScheduleContainersOptions)
 
 		hasAnyClasses = true;
 
-		const cb = new ContainerBuilder()
-			.setAccentColor(isToday ? Colors.Orange : Colors.DarkPurple)
-			.addTextDisplayComponents(text => text.setContent(`**${day}** - ${dayDate}`));
+        const cb = new ContainerBuilder()
+            .setAccentColor(isToday ? Colors.Orange : Colors.DarkPurple)
+            .addTextDisplayComponents(text => text.setContent(`**${day}** - ${dayDate}`));
 
-		const limited = items.slice(0, perDayLimit);
-		let nextName: string | null = null;
-		let nextStart: moment.Moment | null = null;
-		const classDisplays: string[] = [];
+        const limited = items.slice(0, perDayLimit);
+        let nextName: string | null = null;
+        let nextStart: moment.Moment | null = null;
+        const classDisplays: string[] = [];
 
-		for (const s of limited) {
-			const { start: startTime, end: endTime } = helper.resolveClassTime(now, s.Waktu);
-			const time = `${startTime.format("HH:mm")} - ${endTime.format("HH:mm")}`;
-			const duration = helper.formatDuration(now.diff(startTime, "minutes"));
+        for (const s of limited) {
+            const { start: startTime, end: endTime } = helper.resolveClassTime(now, s.Waktu);
+            const time = `${startTime.format("HH:mm")} - ${endTime.format("HH:mm")}`;
+            const duration = helper.formatDuration(endTime.diff(startTime, "minutes"));
 
-			const classStart = baseDay.clone().set({
-				hour: startTime.hour(),
-				minute: startTime.minute(),
-				second: 0,
-				millisecond: 0,
-			});
+            const classStart = baseDay.clone().set({
+                hour: startTime.hour(),
+                minute: startTime.minute(),
+                second: 0,
+                millisecond: 0,
+            });
 
-			if (isToday && classStart.isAfter(now) && (!nextStart || classStart.isBefore(nextStart))) {
-				nextStart = classStart;
-				nextName = s.MataKuliah;
-			}
+            if (isToday && classStart.isAfter(now) && (!nextStart || classStart.isBefore(nextStart))) {
+                nextStart = classStart;
+                nextName = s.MataKuliah;
+            }
 
-			classDisplays.push(`> **${s.MataKuliah}**\n> 👤 _${s.NamaDosen}_\n> ⏱️ **${time}** (${duration})\n> 🚪 _${s.Ruang}_`);
-		}
+            classDisplays.push(`> **${s.MataKuliah}**\n> 👤 _${s.NamaDosen}_\n> ⏱️ **${time}** (${duration})\n> 🚪 _${s.Ruang}_`);
+        }
 
-		if (isToday && nextStart && nextName) {
-			const countdown = `<t:${nextStart.unix()}:R>`;
-			cb.addTextDisplayComponents(text => text.setContent(`**Next: ${nextName} ${countdown}**`));
-		}
+        if (isToday && nextStart && nextName) {
+            const countdown = `<t:${nextStart.unix()}:R>`;
+            cb.addTextDisplayComponents(text => text.setContent(`**Next: ${nextName} ${countdown}**`));
+        }
 
-		cb.addSeparatorComponents(sep => sep);
+        cb.addSeparatorComponents(sep => sep);
 
 		for (const display of classDisplays) {
 			cb.addTextDisplayComponents(text => text.setContent(display));

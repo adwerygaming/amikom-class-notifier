@@ -230,23 +230,40 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
         return null;
     }
 
-    await userClassAssignments.assign(finalScheduleData.id);
+    try {
+        await userClassAssignments.assign(finalScheduleData.id);
 
-    const noUserClassContainer = new ContainerBuilder()
-        .setAccentColor(Colors.DarkRed)
-        .addTextDisplayComponents(text => text.setContent("### Class Assigned"))
-        .addSeparatorComponents(sep => sep)
-        .addTextDisplayComponents(
-            text => text.setContent(`You have assigned to **${finalScheduleData.major} ${finalScheduleData.entry_year} ${finalScheduleData.class_number}**.`)
-        )
-        .addTextDisplayComponents(
-            text => text.setContent(`Please re-run the command you intended to use.`)
-        );
+        const noUserClassContainer = new ContainerBuilder()
+            .setAccentColor(Colors.DarkRed)
+            .addTextDisplayComponents(text => text.setContent("### Class Assigned"))
+            .addSeparatorComponents(sep => sep)
+            .addTextDisplayComponents(
+                text => text.setContent(`You have assigned to **${finalScheduleData.major} ${finalScheduleData.entry_year} ${finalScheduleData.class_number}**.`)
+            )
+            .addTextDisplayComponents(
+                text => text.setContent(`Please re-run the command you intended to use.`)
+            );
 
-    await interaction.editReply({
-        components: [noUserClassContainer],
-        flags: [MessageFlags.IsComponentsV2],
-    });
+        await interaction.editReply({
+            components: [noUserClassContainer],
+            flags: [MessageFlags.IsComponentsV2],
+        });
+    } catch (e) {
+        console.error(`[${tags.Error}] Failed to assign user class:`);
+        console.error(e);
+
+        const errorContainer = new ContainerBuilder()
+            .setAccentColor(Colors.DarkRed)
+            .addTextDisplayComponents(
+                text => text.setContent(`**Failed to assign class.** Please try again or contact an admin.`)
+            );
+
+        await interaction.editReply({
+            components: [errorContainer],
+            flags: [MessageFlags.IsComponentsV2],
+        });
+        return null;
+    }
 
     return {
         scheduleId: finalScheduleData.id,

@@ -3,6 +3,7 @@ import DatabaseClient from "../database/Client.js";
 import { SubscriptionSchema, SubscriptionWithScheduleData } from "../types/Database.types.js";
 
 type RegisterProp = Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified" | "is_active">
+type UpdateProp = Partial<Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified">>
 
 export class DuplicateSubscriptionError extends Error {
     constructor(guildId: string, channelId: string) {
@@ -41,6 +42,23 @@ export class Subscriptions {
     static async fetchAllGuilds(): Promise<SubscriptionSchema[]> {
         const res = await this.db().select("*");
         return res;
+    }
+
+    static async fetchByScheduleId(scheduleId: string): Promise<SubscriptionWithScheduleData[]> {
+        try {
+            const res = await this.db()
+                .leftJoin("schedule_data", "subscriptions.schedule_id", "schedule_data.id")
+                .where("subscriptions.schedule_id", scheduleId)
+                .select<SubscriptionWithScheduleData[]>(
+                    "subscriptions.*",
+                    DatabaseClient.raw("CASE WHEN schedule_data.id IS NULL THEN NULL ELSE to_jsonb(schedule_data) END as schedule_data"),
+                );
+
+            return res ?? null;
+
+        } catch (e) {
+            throw new Error(`Failed to fetch subscriptions for schedule ID ${scheduleId}.`, { cause: e });
+        }
     }
 
     async fetch(withScheduleData: true): Promise<SubscriptionWithScheduleData[]>
@@ -99,15 +117,19 @@ export class Subscriptions {
         }
     }
 
-    async update(props: Partial<Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified">>): Promise<SubscriptionSchema | null> {
-        if (Object.keys(props).length === 0) {
-            throw new Error("No fields provided to update.");
-        }
+    async update(id: string, { user_id, schedule_id, mentions, is_active, channel_id }: UpdateProp): Promise<SubscriptionSchema | null> {
+        mentions = JSON.stringify(mentions) as unknown as string[];
 
         try {
             const [res] = await this.db()
-                .where("guild_id", this.guildId)
-                .update(props)
+                .where("id", id)
+                .update({
+                    user_id,
+                    schedule_id,
+                    mentions,
+                    is_active,
+                    channel_id
+                })
                 .returning("*");
 
             return res ?? null;

@@ -56,9 +56,13 @@ export default {
             const options = guildSubscriptions?.slice(0, 25).map(s => {
                 const sch = s.schedule_data;
                 const channel = interaction.guild?.channels.cache.get(s.channel_id);
+                const scheduleLabel = sch
+                    ? `${sch.entry_year} ${sch.major} ${sch.class_number}`
+                    : "schedule unavailable";
+                const channelLabel = channel?.name ? `${channel?.name} -` : "";
 
                 return {
-                    label: `${channel?.name ? `${channel.name} -` : ""} ${sch?.entry_year} ${sch?.major} ${sch?.class_number}`,
+                    label: `${channelLabel} ${scheduleLabel}`,
                     description: `Subscribed on ${new Date(s.created_at).toLocaleString()}`,
                     value: s.id,
                 } as SelectMenuComponentOptionData;

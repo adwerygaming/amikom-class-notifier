@@ -4,6 +4,7 @@ import "moment/locale/id.js";
 import redisClient from "../database/RedisClient.js";
 import { ReminderEvent } from "../types/ACN.types.js";
 import { ClassSchedule } from "../types/Amikom.types.js";
+import { ScheduleDataSchema } from "../types/Database.types.js";
 import tags from "../utils/Tags.js";
 import { Helper } from "./Helper.js";
 import { ScheduleData } from "./ScheduleData.js";
@@ -21,7 +22,7 @@ interface CheckConfig {
 }
 
 interface UpdateConfig extends CheckConfig {
-    schedule: ClassSchedule[]
+    schedule: ScheduleDataSchema
 }
 
 interface StateConfig {
@@ -31,8 +32,13 @@ interface StateConfig {
 }
 
 export interface CheckReminderResponse {
-    schedule: ClassSchedule
+    schedule: CheckReminderSchedule
     nextSchedule: ClassSchedule | null
+}
+
+export interface CheckReminderSchedule {
+    id: ScheduleDataSchema["id"]
+    schedule: ClassSchedule
 }
 
 export class Reminder {
@@ -75,17 +81,17 @@ export class Reminder {
 
         for (const scheduleData of allSchedules) {
             console.log(`[${tags.Debug}] Checking ${scheduleData.entry_year} ${scheduleData.major} ${scheduleData.class_number} schedule.`);
-            await this.update({ debugTime, schedule: scheduleData.schedule });
+            await this.update({ debugTime, schedule: scheduleData });
         }
     }
 
-    private async update({ debugTime, schedule }: UpdateConfig): Promise<void> {
+    private async update({ debugTime, schedule: rawSchedule }: UpdateConfig): Promise<void> {
         try {
             const now = debugTime || moment().tz("Asia/Jakarta");
-
+            const today = now.locale("id").format("dddd").toUpperCase();
             console.log(`[${tags.Debug}] Right now is ${now.format("HH:mm:ss - dddd, DD MMM YYYY")}`);
 
-            const today = now.locale("id").format("dddd").toUpperCase();
+            const schedule = rawSchedule.schedule;
             const todaySchedule = schedule.filter(s => s.Hari.toUpperCase() === today);
 
             // silent on weekends, no classes anyway
@@ -132,7 +138,10 @@ export class Reminder {
                 };
 
                 const response: CheckReminderResponse = {
-                    schedule: schedule,
+                    schedule: {
+                        id: rawSchedule.id,
+                        schedule
+                    },
                     nextSchedule
                 };
 

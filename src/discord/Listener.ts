@@ -43,7 +43,8 @@ export class Listener {
                 return;
             }
 
-            const schedule = data.schedule;
+            const schedule = data.schedule.schedule;
+            const scheduleId = data.schedule.id;
             // const nextSchedule = data.nextSchedule
 
             const now = moment().tz("Asia/Jakarta");
@@ -75,7 +76,7 @@ export class Listener {
                             }
                         );
 
-                    await this.sendMessage({ embeds: [startingNowEmbed] });
+                    await this.sendMessage(scheduleId, { embeds: [startingNowEmbed] });
                 } else {
                     const diffFromNow = start.diff(now, "minutes");
 
@@ -102,7 +103,7 @@ export class Listener {
                             }
                         );
 
-                    await this.sendMessage({ embeds: [comingEmbed] });
+                    await this.sendMessage(scheduleId, { embeds: [comingEmbed] });
                 }
             } catch (e) {
                 console.error(`[${tags.Error}] Failed to send reminder message:`);
@@ -111,8 +112,8 @@ export class Listener {
         });
     }
 
-    private async sendMessage(content: string | MessagePayload | MessageCreateOptions): Promise<void> {
-        const allGuilds = await Subscriptions.fetchAllGuilds();
+    private async sendMessage(scheduleId: string, content: string | MessagePayload | MessageCreateOptions): Promise<void> {
+        const allGuilds = await Subscriptions.fetchByScheduleId(scheduleId);
         const allDestinations = allGuilds.map(g => {
             return {
                 guild_id: g.guild_id,
@@ -122,8 +123,8 @@ export class Listener {
             };
         });
 
-        try {
-            for (const destination of allDestinations) {
+        for (const destination of allDestinations) {
+            try {
                 if (!destination.is_active) continue;
 
                 const guild_id = destination.guild_id;
@@ -146,10 +147,10 @@ export class Listener {
                     console.log(`[${tags.Reminder}] Sending ${channel} reminder to ${guild.name}`);
                     await channel.send(content);
                 }
+            } catch (e) {
+                console.error(`[${tags.Error}] Failed to send reminder messages:`);
+                console.error(e);
             }
-        } catch (e) {
-            console.error(`[${tags.Error}] Failed to send reminder messages:`);
-            console.error(e);
         }
     }
 }
