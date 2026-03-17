@@ -24,9 +24,12 @@ export default {
         });
 
         try {
+
             const userClass = await userClassAssignments.fetch();
 
             if (!userClass) return await HandleAssigningUserClassInfo(interaction);
+            
+            await interaction.deferReply();
 
             const userScheduleId = userClass.schedule_id;
             const scheduleLookup = await scheduleData.getById({ id: userScheduleId });
@@ -34,8 +37,6 @@ export default {
             if (!scheduleLookup) return await HandleNoScheduleLookupData(interaction);
 
             const schedule = scheduleLookup.schedule;
-
-            await interaction.deferReply();
 
             const now = moment().tz("Asia/Jakarta").locale("id");
             const dateSummaryFormatted = now.format("dddd, DD MMMM YYYY");
@@ -59,6 +60,7 @@ export default {
             });
         } catch (e) {
             console.error(e);
+
             const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(text => text.setContent("### Something went wrong"))

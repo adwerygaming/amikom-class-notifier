@@ -83,10 +83,17 @@ export default {
                     text => text.setContent("Failed to read schedule data. Please make sure you have set the schedule using `/schedule set` command.")
                 );
 
-            await interaction.editReply({
-                components: [errorContainer],
-                flags: [MessageFlags.IsComponentsV2],
-            });
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({
+                    components: [errorContainer],
+                    flags: [MessageFlags.IsComponentsV2],
+                });
+            } else {
+                await interaction.reply({
+                    components: [errorContainer],
+                    flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+                });
+            }
             return;
         }
     }
