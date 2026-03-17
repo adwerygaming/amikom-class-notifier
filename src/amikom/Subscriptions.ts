@@ -54,8 +54,7 @@ export class Subscriptions {
                     DatabaseClient.raw("CASE WHEN schedule_data.id IS NULL THEN NULL ELSE to_jsonb(schedule_data) END as schedule_data"),
                 );
 
-            return res ?? null;
-
+            return res;
         } catch (e) {
             throw new Error(`Failed to fetch subscriptions for schedule ID ${scheduleId}.`, { cause: e });
         }

@@ -46,12 +46,12 @@ export class Listener {
             const schedule = data.schedule.schedule;
             const scheduleId = data.schedule.id;
             // const nextSchedule = data.nextSchedule
-
-            const now = moment().tz("Asia/Jakarta");
-            const { start, end } = helper.resolveClassTime(now, schedule.Waktu);
-            const duration = helper.formatDuration(end.diff(start, "minutes"));
-
+            
             try {
+                const now = moment().tz("Asia/Jakarta");
+                const { start, end } = helper.resolveClassTime(now, schedule.Waktu);
+                const duration = helper.formatDuration(end.diff(start, "minutes"));
+
                 if (channel === ReminderEvent.StartingNow) {
                     const startingNowEmbed = new EmbedBuilder()
                         .setColor(Colors.Orange)
