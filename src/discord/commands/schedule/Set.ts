@@ -17,7 +17,7 @@ export default {
         .setName("set")
         .setDescription("Set schedule data.")
         .addStringOption(option =>
-            option.setName('major') // TODO: make autocomplete system for this one
+            option.setName('major') 
                 .setDescription('Your major (e.g., Sistem Informasi)')
                 .setRequired(true)
         )
@@ -169,7 +169,6 @@ export default {
 
         await interaction.deferReply();
 
-        // TODO: look up for any security measures here
         try {
             let rawSchedule: unknown;
             const res = await axios.get(file.url, {

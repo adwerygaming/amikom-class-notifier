@@ -4,8 +4,8 @@ import { DuplicateSubscriptionError, InvalidSubscriptionDataError, Subscriptions
 import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
-import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
+import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
 
 const scheduleData = new ScheduleData();
 
@@ -42,6 +42,7 @@ export default {
         const targetChannel = await channels.get(targetChannelId);
         const botMember = interaction.guild.members.me;
 
+        // bot perm check
         if (!botMember || !targetChannel?.permissionsFor(botMember)?.has(["ViewChannel", "SendMessages"])) {
             const noPermsContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
@@ -91,8 +92,6 @@ export default {
                 .addTextDisplayComponents(
                     text => text.setContent(`Too late. Please run the command again.`)
                 );
-
-            // TODO: implement context manager and move this on each file for better reuse and readability.
 
             const availableMajors = [...new Set(
                 allClasses.map(c => c.major)
@@ -256,7 +255,7 @@ export default {
                     .addSeparatorComponents(sep => sep)
                     .addTextDisplayComponents(
                         text => text.setContent(`**Couldn't find schedule data for the selected class.** Please try again or contact an admin.`)
-                    );
+                );
 
                 await step3.update({
                     components: [errorContainer],
@@ -269,7 +268,7 @@ export default {
                     channel_id: targetChannel.id,
                     user_id: userId,
                     schedule_id: finalScheduleData.id,
-                    mentions: [] // TODO: allow users to specify mention preferences in the future
+                    mentions: []
                 });
             } catch (e) {
                 if (e instanceof DuplicateSubscriptionError) {
