@@ -117,6 +117,7 @@ export class Subscriptions {
     }
 
     async register({ user_id, channel_id, schedule_id, mentions }: RegisterProp): Promise<SubscriptionSchema> {
+        mentions = JSON.stringify(mentions ?? []) as unknown as string[]
         try {
             const [res] = await this.db()
                 .insert({
@@ -124,7 +125,7 @@ export class Subscriptions {
                     schedule_id,
                     channel_id,
                     user_id,
-                    mentions: mentions || []
+                    mentions
                 })
                 .returning("*")
 

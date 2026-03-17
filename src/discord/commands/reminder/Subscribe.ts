@@ -122,7 +122,7 @@ export default {
                 allClasses.map(c => c.major)
             )].sort();
 
-            const majorOptions = availableMajors.map(m => {
+            const majorOptions = availableMajors.slice(0, 25).map(m => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(m)
                     .setValue(m)
@@ -174,7 +174,7 @@ export default {
                 allClasses.filter(c => c.major === chosenMajor).map(c => c.entry_year)
             )].sort((a, b) => b - a); // newest first
 
-            const yearsOptions = availableYears.map(y => {
+            const yearsOptions = availableYears.slice(0, 25).map(y => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(String(y))
                     .setValue(String(y))
@@ -224,7 +224,7 @@ export default {
                 c => c.major === chosenMajor && c.entry_year === chosenYear
             );
 
-            const classOptions = availableClasses.map(c => {
+            const classOptions = availableClasses.slice(0, 25).map(c => {
                 const option = new StringSelectMenuOptionBuilder()
                     .setLabel(`Class ${c.class_number}`)
                     .setValue(`${chosenMajor} ${c.class_number}`)
