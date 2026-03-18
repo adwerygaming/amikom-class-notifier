@@ -3,6 +3,9 @@ import { ChatInputCommandInteraction, Colors, ContainerBuilder, MessageFlags } f
 export default async function HandleUnresolvableChannel(interaction: ChatInputCommandInteraction): Promise<void> {
     const noChannelContainer = new ContainerBuilder()
         .setAccentColor(Colors.DarkRed)
+        .addTextDisplayComponents(
+            text => text.setContent("### Not Found")
+        )
         .addSeparatorComponents(sep => sep)
         .addTextDisplayComponents(
             text => text.setContent(`**Couldn't resolve target channel.** Make sure the channel is valid and I have access to it.`)

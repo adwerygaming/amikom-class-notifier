@@ -5,6 +5,7 @@ import { ScheduleDataSchema } from "../../types/Database.types.js";
 import { UserFilterIteration } from "../../types/Discord.types.js";
 import tags from "../../utils/Tags.js";
 import HandleNoInteractionGuild from "./NoInteractionGuild.js";
+import HandleNoAnyScheduleData from "./NoAnyScheduleData.js";
 
 type AssignUserClassInfoResults = Pick<ScheduleDataSchema, "major" | "entry_year" | "class_number"> & { scheduleId: string } | null
 
@@ -23,6 +24,12 @@ export default async function HandleAssigningUserClassInfo(interaction: ChatInpu
     });
 
     const schedules = await scheduleData.getAll();
+
+    if (schedules.length === 0) {
+        await HandleNoAnyScheduleData(interaction);
+        return null;
+    }
+
     const majors = schedules.map((x) => x.major);
 
     const TIMEOUT = 60_000;

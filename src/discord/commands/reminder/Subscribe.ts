@@ -6,6 +6,7 @@ import tags from "../../../utils/Tags.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
 import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
+import HandleNoAnyScheduleData from "../../functions/NoAnyScheduleData.js";
 
 const scheduleData = new ScheduleData();
 
@@ -71,18 +72,8 @@ export default {
             const filter = (i: UserFilterIteration): boolean => i.user.id === userId;
 
             const allClasses = await scheduleData.getAll();
-            if (!allClasses.length) {
-                const noSchedulesContainer = new ContainerBuilder()
-                    .setAccentColor(Colors.DarkRed)
-                    .addSeparatorComponents(sep => sep)
-                    .addTextDisplayComponents(
-                        text => text.setContent(`**I don't have any schedules data for any class yet.** Ask your admin to add schedule data using the \`/schedule set\` command first.`)
-                    );
-
-                await interaction.editReply({
-                    components: [noSchedulesContainer],
-                    flags: [MessageFlags.IsComponentsV2],
-                });
+            if (allClasses.length === 0) {
+                await HandleNoAnyScheduleData(interaction);
                 return;
             }
 
