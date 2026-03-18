@@ -17,6 +17,7 @@ const config: Linter.Config[] = [
       }
     },
     rules: {
+      "semi": ["error", "always"],
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/explicit-function-return-type": "error",

@@ -54,9 +54,9 @@ export class CommandHandler {
                         group.set(commandName, command);
                         groupData.options.push(command.metadata.toJSON());
                         this.commands.set(`${file}/${commandName}`, command);
-                        console.log(`[${tags.CommandImporter}] Imported ./${file}/${commandName}`)
+                        console.log(`[${tags.CommandImporter}] Imported ./${file}/${commandName}`);
                     } else {
-                        console.log(`[${tags.CommandImporter}] ./${file}/${subFile} dosen't have metadata.`)
+                        console.log(`[${tags.CommandImporter}] ./${file}/${subFile} dosen't have metadata.`);
                     }
                 }
 
@@ -66,9 +66,9 @@ export class CommandHandler {
                 if (command.metadata) {
                     this.commands.set(command.metadata.name, command);
                     this.commandData.push(command.metadata.toJSON());
-                    console.log(`[${tags.CommandImporter}] Imported ./${command.metadata.name}`)
+                    console.log(`[${tags.CommandImporter}] Imported ./${command.metadata.name}`);
                 } else {
-                    console.log(`[${tags.CommandImporter}] ./${file} dosen't have metadata.`)
+                    console.log(`[${tags.CommandImporter}] ./${file} dosen't have metadata.`);
                 }
             }
         }
@@ -157,10 +157,10 @@ export class CommandHandler {
     public async registerCommands(): Promise<void> {
         if (!botToken || !clientID) {
             console.error('DISCORD_TOKEN and DISCORD_CLIENT_ID must be set in your environment to register commands.');
-            return
+            return;
         }
 
-        const startTime = Date.now()
+        const startTime = Date.now();
         const rest = new REST({ version: '10' }).setToken(botToken);
 
         try {
@@ -173,8 +173,8 @@ export class CommandHandler {
         } catch (error) {
             console.error(error);
         } finally {
-            const endTime = Date.now()
-            console.log(`[${tags.CommandRegister}] Elapsed: ${endTime - startTime}ms`)
+            const endTime = Date.now();
+            console.log(`[${tags.CommandRegister}] Elapsed: ${endTime - startTime}ms`);
         }
     }
 
@@ -204,18 +204,18 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`Couldn't find **${commandName}**. Try again later.`)
-                )
+                );
 
             try {
                 await interaction.reply({
                     components: [noCommandContainer],
                     flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
-                })
+                });
             } catch {
-                console.log(`[${tags.Error}] Failed to send follow up error message.`)
+                console.log(`[${tags.Error}] Failed to send follow up error message.`);
             }
 
-            console.log(`[${tags.Error}] Slash Command ${commandName} couldn't be found.`)
+            console.log(`[${tags.Error}] Slash Command ${commandName} couldn't be found.`);
             return;
         }
 
@@ -229,15 +229,15 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`There was an error while executing this command.`)
-                )
+                );
 
             try {
                 await interaction.reply({
                     components: [commandErrorContainer],
                     flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
-                })
+                });
             } catch {
-                console.log(`[${tags.Error}] Failed to send follow up error message.`)
+                console.log(`[${tags.Error}] Failed to send follow up error message.`);
             }
 
             // sometimes discord returned unknown interaction
@@ -254,7 +254,7 @@ export class CommandHandler {
                     });
                 }
             } catch {
-                console.log(`[${tags.Error}] Failed to send follow up error message.`)
+                console.log(`[${tags.Error}] Failed to send follow up error message.`);
             }
         }
     }
@@ -262,16 +262,20 @@ export class CommandHandler {
     private async handleDropdown(interaction: AnySelectMenuInteraction): Promise<void> {
         const [customId, originalUserId, ...rest] = interaction.customId.split('_');
 
-        console.log(`[${tags.Debug}] Interaction UserId: ${interaction.user.id}`)
-        console.log(`[${tags.Debug}] Original UserId: ${originalUserId}`)
-        console.log(`[${tags.Debug}] Same user? ${(interaction.user.id === originalUserId) ? "Yes" : "No"}`)
+        if (interaction.customId.includes("cmdhdlrignore")) {
+            return;
+        }
+
+        console.log(`[${tags.Debug}] Interaction UserId: ${interaction.user.id}`);
+        console.log(`[${tags.Debug}] Original UserId: ${originalUserId}`);
+        console.log(`[${tags.Debug}] Same user? ${(interaction.user.id === originalUserId) ? "Yes" : "No"}`);
 
         if (interaction.user.id !== originalUserId) {
             const notTheirsContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`This is not your interaction.`)
-                )
+                );
 
             await interaction.reply({
                 components: [notTheirsContainer],
@@ -286,7 +290,7 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`Couldn't find dropdown handler for **${customId}**. Try again later.`)
-                )
+                );
 
             await interaction.reply({
                 components: [noDropdownContainer],
@@ -303,14 +307,14 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`There was an error handling this dropdown.`)
-                )
+                );
 
             try {
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
                         components: [errorContainer],
                         flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
-                    })
+                    });
                 } else {
                     await interaction.reply({
                         components: [errorContainer],
@@ -326,12 +330,16 @@ export class CommandHandler {
     private async handleButton(interaction: ButtonInteraction): Promise<void> {
         const [customId, originalUserId, ...rest] = interaction.customId.split('_');
 
+        if (interaction.customId.includes("cmdhdlrignore")) {
+            return;
+        }
+
         if (interaction.user.id !== originalUserId) {
             const notTheirsContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`This is not your interaction.`)
-                )
+                );
 
             await interaction.reply({
                 components: [notTheirsContainer],
@@ -347,7 +355,7 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`Couldn't find button handler for **${customId}**. Try again later.`)
-                )
+                );
 
             await interaction.reply({
                 components: [noButtonContainer],
@@ -364,14 +372,14 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`There was an error handling this button.'`)
-                )
+                );
 
             try {
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
                         components: [errorContainer],
                         flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
-                    })
+                    });
                 } else {
                     await interaction.reply({
                         components: [errorContainer],
@@ -387,16 +395,20 @@ export class CommandHandler {
     private async handleModal(interaction: ModalSubmitInteraction): Promise<void> {
         const [customId, originalUserId, ...rest] = interaction.customId.split('_');
 
-        console.log(`[${tags.Debug}] Interaction UserId: ${interaction.user.id}`)
-        console.log(`[${tags.Debug}] Original UserId: ${originalUserId}`)
-        console.log(`[${tags.Debug}] Same user? ${(interaction.user.id === originalUserId) ? "Yes" : "No"}`)
+        if (interaction.customId.includes("cmdhdlrignore")) {
+            return;
+        }
+
+        console.log(`[${tags.Debug}] Interaction UserId: ${interaction.user.id}`);
+        console.log(`[${tags.Debug}] Original UserId: ${originalUserId}`);
+        console.log(`[${tags.Debug}] Same user? ${(interaction.user.id === originalUserId) ? "Yes" : "No"}`);
 
         if (interaction.user.id !== originalUserId) {
             const notTheirsContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`This is not your interaction.`)
-                )
+                );
 
             await interaction.reply({
                 components: [notTheirsContainer],
@@ -411,7 +423,7 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`Couldn't find modal handler for **${customId}**. Try again later.`)
-                )
+                );
 
             await interaction.reply({
                 components: [noModalContainer],
@@ -428,14 +440,14 @@ export class CommandHandler {
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     (text) => text.setContent(`There was an error handling this modal.`)
-                )
+                );
 
             try {
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
                         components: [errorContainer],
                         flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
-                    })
+                    });
                 } else {
                     await interaction.reply({
                         components: [errorContainer],

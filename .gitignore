@@ -137,8 +137,10 @@ test/
 # Docker
 docker
 !docker/
-!docker/*compose.yml
-!docker/*.example
+!docker/init/
+!docker/init/**
+!docker/pgadmin/
+!docker/pgadmin/**
 
 # This line was added by .commitai
 # This is a directory for storing commitai stuff to make commit generation better
