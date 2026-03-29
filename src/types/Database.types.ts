@@ -24,6 +24,7 @@ type BaseScheduleSchema = BaseDatabaseSchema & ClassSchedule
 
 export interface ScheduleSchema extends BaseScheduleSchema {
   userId: string;
+  isActive: boolean;
 }
 
 export interface DatabaseTables {

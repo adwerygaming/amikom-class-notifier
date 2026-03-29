@@ -6,24 +6,19 @@ import tags from "../utils/Tags.js";
 interface AddSubscriptionProp {
     guildId: string
     channelId: string
-    userId: string
 }
 
 interface RemoveSubscriptionProp {
+    userId: string
     guildId: string
-    channelId: string
 }
 
 export class Subscriptions {
-    constructor(
-        private readonly userId: string
-    ) { }
-
     private db(): Knex.QueryBuilder<SubscriptionSchema, SubscriptionSchema[]> {
         return DatabaseClient<SubscriptionSchema>("subscriptions");
     }
 
-    async add({ guildId, channelId, userId }: AddSubscriptionProp): Promise<SubscriptionSchema> {
+    async add(userId: string, { guildId, channelId }: AddSubscriptionProp): Promise<SubscriptionSchema> {
         //! IMPORTANT
         // User need to fill out users table first before adding subscription.
         // because userId is `users` table id
@@ -31,7 +26,7 @@ export class Subscriptions {
         try {
             const [res] = await this.db()
                 .insert({
-                    userId, // users table id
+                    userId: userId, // users table id
                     channelId,
                     guildId
                 })
@@ -45,31 +40,45 @@ export class Subscriptions {
         }
     }
 
-    async getByUserId(): Promise<SubscriptionSchema> {
+    async getByGuildId(guildId: string): Promise<SubscriptionSchema[]> {
         try {
-            const [res] = await this.db()
-                .where("userId", this.userId)
+            const res = await this.db()
+                .where("guildId", guildId)
                 .select("*");
 
             return res;
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to get subscriptions by user id [UID: ${this.userId}]`);
+            console.error(`[${tags.Error}] Failed to get subscriptions by guild id [GID: ${guildId}]`);
+            console.error(e);
+            throw new Error("Failed to get subscriptions by guild id.", { cause: e });
+        }
+    }
+
+    async getByUserId(userId: string): Promise<SubscriptionSchema[]> {
+        try {
+            const res = await this.db()
+                .where("userId", userId)
+                .select("*");
+
+            return res;
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to get subscriptions by user id [UID: ${userId}]`);
             console.error(e);
             throw new Error("Failed to get subscriptions by user id.", { cause: e });
         }
     }
 
-    async remove({ guildId, channelId }: RemoveSubscriptionProp): Promise<SubscriptionSchema | null> {
+    async remove({ guildId, userId }: RemoveSubscriptionProp): Promise<SubscriptionSchema | null> {
         try {
             const [res] = await this.db()
                 .where("guildId", guildId)
-                .andWhere("channelId", channelId)
+                .andWhere("userId", userId)
                 .delete()
                 .returning("*");
 
             return res ?? null;
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to remove subscription [GID: ${guildId} | CID: ${channelId}]`);
+            console.error(`[${tags.Error}] Failed to remove subscription [GID: ${guildId} | UID: ${userId}]`);
             console.error(e);
             throw new Error("Failed to remove subscription.", { cause: e });
         }

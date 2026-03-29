@@ -1,6 +1,6 @@
 import { Knex } from "knex";
 import DatabaseClient from "../database/Client.js";
-import { UserSchema } from "../types/Database.types.js";
+import { ScheduleSchema, UserSchema } from "../types/Database.types.js";
 import tags from "../utils/Tags.js";
 
 interface AssignClassProp {
@@ -9,22 +9,70 @@ interface AssignClassProp {
     class_number: number;
 }
 
+interface GetByUserIdWithScheduleResult extends UserSchema {
+    schedules: ScheduleSchema[]
+}
+
 export class Users {
     private db(): Knex.QueryBuilder<UserSchema, UserSchema[]> {
         return DatabaseClient<UserSchema>("users");
     }
 
-    async getById(userId: string): Promise<UserSchema> {
+    async getById(id: string): Promise<UserSchema | null> {
         try {
-            const [res] = await this.db()
+            const res = await this.db()
                 .select("*")
-                .where("userId", userId);
+                .where("id", id)
+                .first();
 
-            return res;
+            return res ?? null;
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to get user data by id [ID: ${id}]`);
+            console.error(e);
+            throw new Error("Failed to get user data by id.", { cause: e });
+        }
+    }
+
+    async getByUserId(userId: string): Promise<UserSchema | null> {
+        try {
+            const res = await this.db()
+                .select("*")
+                .where("userId", userId)
+                .first();
+
+            return res ?? null;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to get user data by user id [UID: ${userId}]`);
             console.error(e);
             throw new Error("Failed to get user data by user id.", { cause: e });
+        }
+    }
+
+    async getByUserIdWithSchedule(userId: string): Promise<GetByUserIdWithScheduleResult | null> {
+        try {
+
+            // TODO: Might optimize this into single query later.
+            const user = await this.db()
+                .where("userId", userId)
+                .select("*")
+                .first();
+
+            if (!user) return null;
+
+            const schedules = await DatabaseClient<ScheduleSchema>("schedules")
+                .select("*")
+                .where("userId", user.id);
+
+            const res = {
+                ...user,
+                schedules
+            };
+
+            return res ?? null;
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to get user data by user id with schedule [UID: ${userId}]`);
+            console.error(e);
+            throw new Error("Failed to get user data by user id with schedule.", { cause: e });
         }
     }
 

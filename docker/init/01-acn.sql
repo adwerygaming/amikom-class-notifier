@@ -1,6 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     "lastModified" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -10,7 +8,7 @@ CREATE TABLE users (
     class_number SMALLINT NOT NULL
 );
 
-CREATE TABLE schedules (
+CREATE TABLE IF NOT EXISTS schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     "lastModified" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -35,15 +33,18 @@ CREATE TABLE schedules (
     "ZoomURL" TEXT NOT NULL
 );
 
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     "lastModified" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     "guildId" TEXT NOT NULL,
-    "channelId" TEXT UNIQUE NOT NULL, -- 1 notification feed per channel
+    "channelId" TEXT NOT NULL,
     "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     mentions BOOLEAN DEFAULT FALSE
+
+    CONSTRAINT subscriptions_user_guild_unique UNIQUE ("userId", "guildId")
 );
+
 
 
 CREATE OR REPLACE FUNCTION update_modified_column()
