@@ -2,7 +2,7 @@ import axios from "axios";
 import { Colors, ContainerBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import z from "zod";
 import { Helper } from "../../../amikom/Helper.js";
-import { ScheduleData } from "../../../amikom/ScheduleData.js";
+import { ScheduleData } from "../../../amikom/Schedules.js";
 import { classScheduleSchema, ListHari } from "../../../types/Amikom.types.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";

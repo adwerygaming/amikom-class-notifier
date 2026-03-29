@@ -1,6 +1,6 @@
 import { Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 import moment from "moment-timezone";
-import { ScheduleData } from "../../../amikom/ScheduleData.js";
+import { ScheduleData } from "../../../amikom/Schedules.js";
 import { UserClassAssignments } from "../../../amikom/UserClassAssignments.js";
 import { amikomLogoURL } from "../../../types/Amikom.types.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";

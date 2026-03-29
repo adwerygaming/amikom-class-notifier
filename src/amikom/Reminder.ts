@@ -7,7 +7,7 @@ import { ClassSchedule } from "../types/Amikom.types.js";
 import { ScheduleDataSchema } from "../types/Database.types.js";
 import tags from "../utils/Tags.js";
 import { Helper } from "./Helper.js";
-import { ScheduleData } from "./ScheduleData.js";
+import { ScheduleData } from "./Schedules.js";
 
 const schedule = new ScheduleData();
 const helper = new Helper();

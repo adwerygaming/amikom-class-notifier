@@ -1,12 +1,12 @@
 import { Colors, ComponentType, ContainerBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
-import { ScheduleData } from "../../../amikom/ScheduleData.js";
+import { ScheduleData } from "../../../amikom/Schedules.js";
 import { DuplicateSubscriptionError, InvalidSubscriptionDataError, Subscriptions } from "../../../amikom/Subscriptions.js";
 import { SlashCommandLayout, UserFilterIteration } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
+import HandleNoAnyScheduleData from "../../functions/NoAnyScheduleData.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
 import HandleUserNoPermissions from "../../functions/UserNoPermissions.js";
-import HandleNoAnyScheduleData from "../../functions/NoAnyScheduleData.js";
 
 const scheduleData = new ScheduleData();
 

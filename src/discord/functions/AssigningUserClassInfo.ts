@@ -1,11 +1,11 @@
 import { ChatInputCommandInteraction, Colors, ComponentType, ContainerBuilder, MessageFlags, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
-import { ScheduleData } from "../../amikom/ScheduleData.js";
+import { ScheduleData } from "../../amikom/Schedules.js";
 import { UserClassAssignments } from "../../amikom/UserClassAssignments.js";
 import { ScheduleDataSchema } from "../../types/Database.types.js";
 import { UserFilterIteration } from "../../types/Discord.types.js";
 import tags from "../../utils/Tags.js";
-import HandleNoInteractionGuild from "./NoInteractionGuild.js";
 import HandleNoAnyScheduleData from "./NoAnyScheduleData.js";
+import HandleNoInteractionGuild from "./NoInteractionGuild.js";
 
 type AssignUserClassInfoResults = Pick<ScheduleDataSchema, "major" | "entry_year" | "class_number"> & { scheduleId: string } | null
 
