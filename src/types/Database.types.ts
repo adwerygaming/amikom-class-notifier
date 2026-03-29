@@ -2,8 +2,8 @@ import { type ClassSchedule } from "./Amikom.types.js";
 
 export interface BaseDatabaseSchema {
     id: string;
-    created_at: string;
-    last_modified: string;
+    createdAt: string;
+    lastModified: string;
 }
 
 export interface SubscriptionSchema extends BaseDatabaseSchema {

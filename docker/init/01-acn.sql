@@ -44,3 +44,27 @@ CREATE TABLE subscriptions (
     "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     mentions BOOLEAN DEFAULT FALSE
 );
+
+
+CREATE OR REPLACE FUNCTION update_modified_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW."lastModified" = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_users_modtime
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_modified_column();
+
+CREATE TRIGGER update_schedules_modtime
+    BEFORE UPDATE ON schedules
+    FOR EACH ROW
+    EXECUTE FUNCTION update_modified_column();
+
+CREATE TRIGGER update_subscriptions_modtime
+    BEFORE UPDATE ON subscriptions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_modified_column();
