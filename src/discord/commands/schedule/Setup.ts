@@ -35,7 +35,7 @@ export default {
         if (user) {
             menuContainer
                 .addTextDisplayComponents(
-                    t => t.setContent(`You already configured your class before.`)
+                    t => t.setContent(`**You already configured your class before.**`)
                 )
                 .addTextDisplayComponents(
                     t => t.setContent(`Major: **${user.major}**`)
@@ -46,6 +46,7 @@ export default {
                 .addTextDisplayComponents(
                     t => t.setContent(`Entry Year: **${user.entry_year}**`)
                 )
+                .addSeparatorComponents(s => s)
                 .addTextDisplayComponents(
                     t => t.setContent(`If you want to update your class information, please click the button below to restart the setup process.`)
                 )

@@ -30,6 +30,8 @@ export class Subscriptions {
                     channelId,
                     guildId
                 })
+                .onConflict(["userId", "guildId"])
+                .merge({ channelId })
                 .returning("*");
 
             return res;

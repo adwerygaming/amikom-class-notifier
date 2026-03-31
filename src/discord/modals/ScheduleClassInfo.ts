@@ -17,20 +17,25 @@ export default {
         const classNumber = await interaction.fields.getTextInputValue("classNumber");
         const entryYear = await interaction.fields.getTextInputValue("entryYear");
 
-        const noBtn = new ButtonBuilder()
-            .setCustomId(`schedule_${interaction.user.id}_start`)
-            .setLabel("No, I would like to restart.")
-            .setStyle(ButtonStyle.Secondary);
+        const ctxData: ScheduleSetupUserInfoContextData = {
+            executorUserId: interaction.user.id,
+            major,
+            classNumber: parseInt(classNumber),
+            entryYear: parseFloat(entryYear)
+        };
+
+        const ctxId = await ContextManager.create<ScheduleSetupUserInfoContextData>(ctxData);
+
+        const tryAgainBtn = new ButtonBuilder()
+            .setCustomId(`schedule_${interaction.user.id}_start_${ctxId}`)
+            .setLabel("Try again")
+            .setStyle(ButtonStyle.Primary);
 
         if (major.length == 0 || classNumber.length == 0 || entryYear.length == 0 || isNaN(parseInt(classNumber)) || isNaN(parseFloat(entryYear))) {
-            const tryAgainBtn = noBtn
-                .setLabel("Try again")
-                .setStyle(ButtonStyle.Primary);
-
             const badRequestContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
-                    t => t.setContent(`## Bad Input`)
+                    t => t.setContent(`### Bad Input`)
                 )
                 .addSeparatorComponents(s => s)
                 .addSectionComponents(
@@ -47,24 +52,19 @@ export default {
             return;
         }
 
-        const ctxData: ScheduleSetupUserInfoContextData = {
-            executorUserId: interaction.user.id,
-            major,
-            classNumber: parseInt(classNumber),
-            entryYear: parseFloat(entryYear)
-        };
-
-        const ctxId = await ContextManager.create<ScheduleSetupUserInfoContextData>(ctxData);
-
         const yesBtn = new ButtonBuilder()
             .setCustomId(`schedule_${interaction.user.id}_confirm_${ctxId}`)
             .setLabel("Yes, that is correct.")
             .setStyle(ButtonStyle.Success);
 
+        const noBtn = tryAgainBtn
+            .setLabel("No, I would like to restart.")
+            .setStyle(ButtonStyle.Secondary);
+
         const confirmContainer = new ContainerBuilder()
             .setAccentColor(Colors.DarkPurple)
             .addTextDisplayComponents(
-                t => t.setContent(`## Confirm`)
+                t => t.setContent(`### Confirm`)
             )
             .addTextDisplayComponents(
                 t => t.setContent(`Please check again your data below. Make sure it's correct.`)

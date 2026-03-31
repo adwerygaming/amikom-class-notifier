@@ -18,6 +18,11 @@ export class Users {
         return DatabaseClient<UserSchema>("users");
     }
 
+    /**
+     * Fetches user data by user ID
+     * @param id User ID (Not Discord ID)
+     * @returns {UserSchema | null} User data associated with the user ID, or null if not found.
+     */
     async getById(id: string): Promise<UserSchema | null> {
         try {
             const res = await this.db()
@@ -33,6 +38,43 @@ export class Users {
         }
     }
 
+    /**
+     * Fetches user data along with their schedules by user ID
+     * @param id User ID (Not Discord ID)
+     * @returns {GetByUserIdWithScheduleResult | null} User data along with their schedules, or null if not found.
+     */
+    async getByIdWithSchedule(id: string): Promise<GetByUserIdWithScheduleResult | null> {
+        try {
+            // TODO: optimize this into single query later.
+            const user = await this.db()
+                .where("id", id)
+                .select("*")
+                .first();
+
+            if (!user) return null;
+
+            const schedules = await DatabaseClient<ScheduleSchema>("schedules")
+                .select("*")
+                .where("userId", user.id);
+
+            const res = {
+                ...user,
+                schedules
+            };
+
+            return res;
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to get user data by user id with schedule [ID: ${id}]`);
+            console.error(e);
+            throw new Error("Failed to get user data by user id with schedule.", { cause: e });
+        }
+    }
+
+    /**
+     * Fetches user data by Discord user ID
+     * @param userId Discord User ID
+     * @returns {UserSchema | null} User data associated with the Discord user ID, or null if not found.
+     */
     async getByDiscordId(userId: string): Promise<UserSchema | null> {
         try {
             const res = await this.db()
@@ -42,13 +84,18 @@ export class Users {
 
             return res ?? null;
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to get user data by user id [UID: ${userId}]`);
+            console.error(`[${tags.Error}] Failed to get user data by discord user id [UID: ${userId}]`);
             console.error(e);
-            throw new Error("Failed to get user data by user id.", { cause: e });
+            throw new Error("Failed to get user data by discord user id.", { cause: e });
         }
     }
 
-    async getByUserIdWithSchedule(userId: string): Promise<GetByUserIdWithScheduleResult | null> {
+    /**
+     * Fetches user data along with their schedules by Discord user ID
+     * @param userId Discord User ID
+     * @returns {GetByUserIdWithScheduleResult | null} User data along with their schedules, or null if not found.
+     */
+    async getByDiscordIdWithSchedule(userId: string): Promise<GetByUserIdWithScheduleResult | null> {
         try {
             // TODO: optimize this into single query later.
             const user = await this.db()
@@ -69,9 +116,9 @@ export class Users {
 
             return res;
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to get user data by user id with schedule [UID: ${userId}]`);
+            console.error(`[${tags.Error}] Failed to get user data by discord user id with schedule [UID: ${userId}]`);
             console.error(e);
-            throw new Error("Failed to get user data by user id with schedule.", { cause: e });
+            throw new Error("Failed to get user data by discord user id with schedule.", { cause: e });
         }
     }
 
@@ -81,7 +128,7 @@ export class Users {
      * @param options.major string
      * @param options.entry_year number
      * @param options.class_number number
-     * @returns 
+     * @returns {UserSchema} The updated user data
      */
     async assignClass(userId: string, { major, entry_year, class_number }: AssignClassProp): Promise<UserSchema> {
         try {

@@ -36,20 +36,25 @@ export class Schedules {
      */
     async set(userId: string, schedule: ClassSchedule[]): Promise<ScheduleSchema[]> {
         try {
-            await this.db()
-                .where("userId", userId)
-                .delete();
+            const res = await DatabaseClient.transaction(async trx => {
+                // delete
+                await this.db()
+                    .transacting(trx)
+                    .where("userId", userId)
+                    .delete();
 
-            const data = schedule.map((x) => ({ ...x, userId }));
-            const res = await this.db()
-                .insert(data)
-                .returning("*");
+                const res = await this.db()
+                    .transacting(trx)
+                    .insert(schedule.map((x) => ({ ...x, userId })))
+                    .returning("*");
+
+                return res;
+            });
 
             return res;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to set schedule to a user [UID: ${userId}]`);
             console.error(`[${tags.Error}] Schedule: ${typeof schedule}, has ${schedule?.length} items.`);
-            console.log(schedule);
             console.error(e);
             throw new Error("Failed to set schedule to a user.", { cause: e });
         }

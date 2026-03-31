@@ -130,9 +130,7 @@ export default {
                     flags: [MessageFlags.IsComponentsV2]
                 });
                 // saved the user class info. next is to do their schedule data.
-            } catch (e) {
-                const err = e as Error;
-
+            } catch {
                 const failToAssignContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
                     .addTextDisplayComponents(
@@ -141,11 +139,7 @@ export default {
                     .addSeparatorComponents(s => s)
                     .addTextDisplayComponents(
                         t => t.setContent(`Failed to assign <@${ctx.executorUserId}> with to their class. Try again later.`)
-                    )
-                    .addTextDisplayComponents(
-                        t => t.setContent("```" + err.cause + "```")
                     );
-
                 await interaction.update({
                     components: [failToAssignContainer],
                     flags: [MessageFlags.IsComponentsV2]
