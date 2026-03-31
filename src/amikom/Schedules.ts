@@ -36,6 +36,10 @@ export class Schedules {
      */
     async set(userId: string, schedule: ClassSchedule[]): Promise<ScheduleSchema[]> {
         try {
+            await this.db()
+                .where("userId", userId)
+                .delete();
+
             const data = schedule.map((x) => ({ ...x, userId }));
             const res = await this.db()
                 .insert(data)

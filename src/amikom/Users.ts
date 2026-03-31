@@ -67,7 +67,7 @@ export class Users {
                 schedules
             };
 
-            return res ?? null;
+            return res;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to get user data by user id with schedule [UID: ${userId}]`);
             console.error(e);
@@ -95,6 +95,10 @@ export class Users {
                 .onConflict("userId")
                 .merge(["major", "entry_year", "class_number"])
                 .returning("*");
+
+            if (!res) {
+                throw new Error("Failed to assign class to user.", { cause: "there is conflict. good luck." });
+            }
 
             return res;
         } catch (e) {

@@ -15,7 +15,7 @@ export class ContextManager {
     }
 
     static async get<T = unknown>(uuid: string): Promise<T | null> {
-        const data = await redis.get(`interaction_context:${uuid}`);
+        const data = await redis.getdel(`interaction_context:${uuid}`);
         if (!data) return null;
 
         try {

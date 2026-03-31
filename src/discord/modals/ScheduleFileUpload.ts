@@ -48,7 +48,8 @@ export default {
 
         const { data: res, status, statusText } = await axios.get<ClassSchedule[]>(url, {
             responseType: "json",
-            validateStatus: () => true
+            validateStatus: () => true,
+            timeout: 10000
         });
 
         if (status != 200) {

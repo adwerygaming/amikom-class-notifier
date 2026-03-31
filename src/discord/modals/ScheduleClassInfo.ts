@@ -17,21 +17,28 @@ export default {
         const classNumber = await interaction.fields.getTextInputValue("classNumber");
         const entryYear = await interaction.fields.getTextInputValue("entryYear");
 
-        if (major.length == 0 || classNumber.length == 0 || entryYear.length == 0) {
+        const noBtn = new ButtonBuilder()
+            .setCustomId(`schedule_${interaction.user.id}_start`)
+            .setLabel("No, I would like to restart.")
+            .setStyle(ButtonStyle.Secondary);
+
+        if (major.length == 0 || classNumber.length == 0 || entryYear.length == 0 || isNaN(parseInt(classNumber)) || isNaN(parseFloat(entryYear))) {
+            const tryAgainBtn = noBtn
+                .setLabel("Try again")
+                .setStyle(ButtonStyle.Primary);
+
             const badRequestContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
                 .addTextDisplayComponents(
                     t => t.setContent(`## Bad Input`)
                 )
-                .addSeparatorComponents(
-                    s => s
-                )
-                .addTextDisplayComponents(
-                    t => t.setContent(`**Invalid Input**: Make sure you have filled all the required fields properly.`)
-                )
-                .addTextDisplayComponents(
-                    t => t.setContent(`Re-run the command to try again.`)
-            );
+                .addSeparatorComponents(s => s)
+                .addSectionComponents(
+                    s => s.addTextDisplayComponents(
+                        t => t.setContent(`**Invalid Input**: Make sure you have filled all the required fields properly.`)
+                    )
+                        .setButtonAccessory(() => tryAgainBtn)
+                );
 
             await interaction.update({
                 components: [badRequestContainer],
@@ -53,11 +60,6 @@ export default {
             .setCustomId(`schedule_${interaction.user.id}_confirm_${ctxId}`)
             .setLabel("Yes, that is correct.")
             .setStyle(ButtonStyle.Success);
-
-        const noBtn = new ButtonBuilder()
-            .setCustomId(`schedule_${interaction.user.id}_start`)
-            .setLabel("No, I would like to restart.")
-            .setStyle(ButtonStyle.Secondary);
 
         const confirmContainer = new ContainerBuilder()
             .setAccentColor(Colors.DarkPurple)

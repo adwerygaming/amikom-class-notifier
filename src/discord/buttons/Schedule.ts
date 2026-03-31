@@ -74,6 +74,8 @@ export default {
                     major: ctx.major
                 });
 
+                await ContextManager.delete(ctxId);
+
                 const amikomDashboardBtn = new ButtonBuilder()
                     .setStyle(ButtonStyle.Link)
                     .setLabel("Dashboard Mahasiswa")
