@@ -9,6 +9,11 @@ export class Schedules {
         return DatabaseClient<ScheduleSchema>("schedules");
     }
 
+    /**
+     * Fetches all schedules for a given user ID
+     * @param userId Users ID (Not Discord ID)
+     * @returns {ScheduleSchema[]} An array of schedule data associated with the user ID.
+     */
     async getByUserId(userId: string): Promise<ScheduleSchema[]> {
         try {
             const res = await this.db()
@@ -23,10 +28,17 @@ export class Schedules {
         }
     }
 
+    /**
+     * Sets the schedule for a given user ID
+     * @param userId Users ID (Not Discord ID)
+     * @param schedule Schedule data to be set for the user.
+     * @returns {ScheduleSchema[]} The inserted schedule data after being set.
+     */
     async set(userId: string, schedule: ClassSchedule[]): Promise<ScheduleSchema[]> {
         try {
+            const data = schedule.map((x) => ({ ...x, userId }));
             const res = await this.db()
-                .insert(schedule)
+                .insert(data)
                 .returning("*");
 
             return res;

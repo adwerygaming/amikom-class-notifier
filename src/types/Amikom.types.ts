@@ -57,21 +57,23 @@ export interface ClassSchedule {
     ZoomURL: string
 }
 
-export const classScheduleSchema: z.ZodType<ClassSchedule> = z.object({
-    IdHari: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
-    IdJam: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
-    IdKuliah: z.number(),
-    Keterangan: z.string(),
-    Hari: z.enum(["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT"]),
-    Ruang: z.string(),
-    Waktu: z.string(),
-    Kode: z.string(),
-    MataKuliah: z.string(),
-    JenisKuliah: z.enum(["Teori", "Praktikum"]),
-    Kelas: z.string(),
-    NamaDosen: z.string(),
-    EmailDosen: z.string(),
-    IsBolehPresensi: z.union([z.literal(0), z.literal(1)]),
-    IsZoomURL: z.union([z.literal(0), z.literal(1)]),
-    ZoomURL: z.string(),
-});
+export const classSchedulesSchema: z.ZodType<ClassSchedule[]> = z.array(
+    z.object({
+        IdHari: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
+        IdJam: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+        IdKuliah: z.number(),
+        Keterangan: z.string(),
+        Hari: z.enum(["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT"]),
+        Ruang: z.string(),
+        Waktu: z.string(),
+        Kode: z.string(),
+        MataKuliah: z.string(),
+        JenisKuliah: z.enum(["Teori", "Praktikum"]),
+        Kelas: z.string(),
+        NamaDosen: z.string(),
+        EmailDosen: z.string(),
+        IsBolehPresensi: z.union([z.literal(0), z.literal(1)]),
+        IsZoomURL: z.union([z.literal(0), z.literal(1)]),
+        ZoomURL: z.string(),
+    })
+);

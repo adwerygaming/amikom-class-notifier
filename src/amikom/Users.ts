@@ -33,7 +33,7 @@ export class Users {
         }
     }
 
-    async getByUserId(userId: string): Promise<UserSchema | null> {
+    async getByDiscordId(userId: string): Promise<UserSchema | null> {
         try {
             const res = await this.db()
                 .select("*")
@@ -50,8 +50,7 @@ export class Users {
 
     async getByUserIdWithSchedule(userId: string): Promise<GetByUserIdWithScheduleResult | null> {
         try {
-
-            // TODO: Might optimize this into single query later.
+            // TODO: optimize this into single query later.
             const user = await this.db()
                 .where("userId", userId)
                 .select("*")
@@ -76,6 +75,14 @@ export class Users {
         }
     }
 
+    /**
+     * Assign Discord User's Class Information
+     * @param userId Discord User ID
+     * @param options.major string
+     * @param options.entry_year number
+     * @param options.class_number number
+     * @returns 
+     */
     async assignClass(userId: string, { major, entry_year, class_number }: AssignClassProp): Promise<UserSchema> {
         try {
             const [res] = await this.db()

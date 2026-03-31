@@ -1,4 +1,5 @@
 import { ChatInputCommandInteraction, Colors, ContainerBuilder, MessageFlags, PermissionResolvable, PermissionsBitField } from "discord.js";
+import tags from "../../utils/Tags.js";
 
 const toReadableNames = (permissions: PermissionResolvable[]): string[] => {
     const names = new PermissionsBitField(permissions).toArray();
@@ -10,22 +11,27 @@ const toReadableNames = (permissions: PermissionResolvable[]): string[] => {
 };
 
 export default async function HandleUserNoPermissions(interaction: ChatInputCommandInteraction, permissions: PermissionResolvable[]): Promise<void> {
-    const readable = toReadableNames(permissions);
-    const permissionList = readable.join(", ");
-    const plural = readable.length > 1 ? "s" : "";
+    try {
+        const readable = toReadableNames(permissions);
+        const permissionList = readable.join(", ");
+        const plural = readable.length > 1 ? "s" : "";
 
-    const unauthorizedContainer = new ContainerBuilder()
-        .setAccentColor(Colors.DarkRed)
-        .addTextDisplayComponents(
-            text => text.setContent("### Unauthorized")
-        )
-        .addSeparatorComponents(sep => sep)
-        .addTextDisplayComponents(
-            text => text.setContent(`You don't have permission to use this command. You need ${permissionList} permission${plural} to use this command.`)
-        );
+        const unauthorizedContainer = new ContainerBuilder()
+            .setAccentColor(Colors.DarkRed)
+            .addTextDisplayComponents(
+                text => text.setContent("### Unauthorized")
+            )
+            .addSeparatorComponents(sep => sep)
+            .addTextDisplayComponents(
+                text => text.setContent(`You don't have permission to use this command. You need ${permissionList} permission${plural} to use this command.`)
+            );
 
-    await interaction.reply({
-        components: [unauthorizedContainer],
-        flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-    });
+        await interaction.reply({
+            components: [unauthorizedContainer],
+            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+        });
+    } catch (e) {
+        console.error(`[${tags.Error}] Failed to handle User has no required permissions situation.`);
+        console.error(e);
+    }
 }

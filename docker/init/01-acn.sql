@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     "guildId" TEXT NOT NULL,
     "channelId" TEXT NOT NULL,
     "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    mentions BOOLEAN DEFAULT FALSE
+    mentions BOOLEAN DEFAULT FALSE,
 
     CONSTRAINT subscriptions_user_guild_unique UNIQUE ("userId", "guildId")
 );

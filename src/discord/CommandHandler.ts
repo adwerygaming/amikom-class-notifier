@@ -417,7 +417,7 @@ export class CommandHandler {
             return;
         }
 
-        const modal = this.modals.get(customId ?? '');
+        const modal = this.modals.get(customId);
         if (!modal) {
             const noModalContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
