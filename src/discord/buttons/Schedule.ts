@@ -131,6 +131,8 @@ export default {
                 });
                 // saved the user class info. next is to do their schedule data.
             } catch {
+                await ContextManager.delete(ctxId);
+
                 const failToAssignContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
                     .addTextDisplayComponents(

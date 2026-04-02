@@ -1,10 +1,12 @@
-import { ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, Client, Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 import moment from "moment-timezone";
 import { Helper } from "../../../amikom/Helper.js";
 import { Schedules } from "../../../amikom/Schedules.js";
 import { Users } from "../../../amikom/Users.js";
+import { ScheduleSchema } from "../../../types/Database.types.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedule.js";
 
 const users = new Users();
 const schedules = new Schedules();
@@ -21,104 +23,117 @@ export default {
         }
 
         const user = await users.getByDiscordId(interaction.user.id);
-
-        const submitClassInfoBtn = new ButtonBuilder()
-            .setCustomId(`schedule_${interaction.user.id}_start`)
-            .setLabel("Submit Class Information")
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('📚');
-
         if (!user) {
-            const hasntSetupScheduleContainer = new ContainerBuilder()
-                .setAccentColor(Colors.DarkRed)
-                .addTextDisplayComponents(
-                    t => t.setContent(`### No Schedule Data Found`)
-                )
-                .addSeparatorComponents(s => s)
-                .addTextDisplayComponents(
-                    t => t.setContent(`**Looks like you haven't setup your schedule data yet.**`)
-                )
-                .addSectionComponents(
-                    s => s.addTextDisplayComponents(
-                        t => t.setContent(`To use the schedule command, **you need to submit your class information & schedule data first** by using this button.`)
-                    )
-                        .setButtonAccessory(() => submitClassInfoBtn)
-                );
-
-            await interaction.reply({ components: [hasntSetupScheduleContainer] });
+            await HandleUserHasNotSetupSchedule(interaction);
             return;
         }
 
+        const now = moment().tz("Asia/Jakarta");
+        const todayDayName = now.locale("id").format("dddd");
+
         const schedule = await schedules.getByUserId(user.id);
-
-        /**
-         *   {
-                id: '5d2fc903-35e4-4c5c-bce9-a27021d8e170',
-                createdAt: 2026-03-31T06:06:06.742Z,
-                lastModified: 2026-03-31T06:06:06.742Z,
-                userId: 'e57b4aed-5dd1-42db-8db5-79198b751e56',
-                isActive: true,
-                IdHari: 0,
-                IdJam: 2,
-                IdKuliah: 83777,
-                Keterangan: '',
-                Hari: 'JUMAT',
-                Ruang: 'L 2.2.1',
-                Waktu: '08:50-10:30',
-                Kode: 'SI084',
-                MataKuliah: 'BAHASA PEMROGRAMAN I',
-                JenisKuliah: 'Praktikum',
-                Kelas: '25S1SI04-BahasaP(SI084)',
-                NamaDosen: 'Hendra Kurniawan, S.Kom., M.Kom.',
-                EmailDosen: 'hendrakurniawan@amikom.ac.id',
-                IsBolehPresensi: 0,
-                IsZoomURL: 1,
-                ZoomURL: '-'
-            }
-         */
-
-        const todayDayName = moment().tz("Asia/Jakarta").locale("id").format("dddd");
         const todaySchedules = schedule.filter(s => s.Hari.toUpperCase() === todayDayName.toUpperCase());
+        const todayFormatted = now.format("dddd, DD MMMM YYYY");
 
-        const courcesContainers = [];
+        const coursesContainers = [];
         const headerContainer = new ContainerBuilder()
             .setAccentColor(Colors.Purple)
             .addTextDisplayComponents(
                 t => t.setContent(`### Today's Schedule`)
+            )
+            .addTextDisplayComponents(
+                t => t.setContent(`You have **${todaySchedules.length} class${todaySchedules.length !== 1 ? "es" : ""}** today.`)
+            )
+            .addSeparatorComponents(s => s)
+            .addTextDisplayComponents(
+                t => t.setContent(`🗓️ **${todayFormatted}**`)
             );
 
-        for (const c of todaySchedules) {
-            const now = moment();
-            const { start, end } = await helper.resolveClassTime({ time: c.Waktu });
+        for(let i = 0; i < todaySchedules.length; i++) {
+            const course = todaySchedules[i];
 
-            const duration = moment.duration(end.diff(start));
-            const isInRange = now.isBetween(start, end);
-            // const isPassed = start.isAfter(now);
-            const isUpcoming = start.isBefore(now) && end.isAfter(now);
-            const upcomingInMinutes = start.diff(now, "minutes");
+            const now = moment().tz("Asia/Jakarta");
+            const { start: courseStart, end: courseEnd } = await helper.resolveClassTime({ time: course.Waktu });
 
-            const time = `${start.format("HH:mm")} - ${end.format("HH:mm")}`;
+            // Calculations
+            const duration = moment.duration(courseEnd.diff(courseStart));
+            const isInRange = now.isBetween(courseStart, courseEnd);
+            // const isPassed = courseStart.isAfter(now);
+            const isUpcoming = now.isBefore(courseStart);
+            const upcomingDiscordTimestamp = `<t:${Math.floor(courseStart.unix())}:R>`;
+
+            // Header formatting
+            const title = `${course.MataKuliah}`;
+            const subtitle = `${course.JenisKuliah == "Praktikum" ? "-# Praktikum" : ""}\n${isUpcoming ? `Starts ${upcomingDiscordTimestamp}` : ""}`;
+
+            // Time formatting
+            const time = `${courseStart.format("HH:mm")} - ${courseEnd.format("HH:mm")}`;
             const timeField = `**${time}** (${helper.formatDuration(duration.as("minutes"))})`;
-            
-            const room = c.Ruang;
+
+            // Room formatting
+            const room = course.Ruang;
             const roomFormatted = helper.resolveRoomCode(room).string;
-            
             const roomField = `**${room}** (${roomFormatted})`;
 
+            // Lecturer formatting
+            const lecturer = `${course.NamaDosen}`;
+            const lecturerField = `${lecturer}`;
+
+            // Build container
             const courseContainer = new ContainerBuilder()
-                .setAccentColor(isInRange ? Colors.Orange : Colors.DarkPurple)
+                .setAccentColor(isInRange ? Colors.Orange : Colors.DarkPurple);
+
+            if (isInRange) {
+                courseContainer.addTextDisplayComponents(t => t.setContent(`**You are here!**`));
+            }
+
+            courseContainer
+                .addTextDisplayComponents(t => t.setContent(`### ${title}\n${subtitle}`))
+                .addTextDisplayComponents(t => t.setContent(`⏱️ ${timeField}\n🚪 ${roomField}\n👤 ${lecturerField}`));
+
+            if (course.Keterangan) {
+                courseContainer.addTextDisplayComponents(t => t.setContent(`📝 **${course.Keterangan}**`));
+            }
+
+            coursesContainers.push(courseContainer);
+
+            const nextCourse: ScheduleSchema | undefined = todaySchedules[i + 1];
+            if (!nextCourse) {
+                continue;
+            }
+
+            const { start: nextCourseStart } = await helper.resolveClassTime({ time: nextCourse.Waktu });
+
+            // Gap calculation
+            const hasGap = nextCourseStart.isAfter(courseEnd);
+            if (hasGap) {
+                const gapDurationInMinutes = nextCourseStart.diff(courseEnd, "minutes");
+                const isCurrentGap = now.isBetween(courseEnd, nextCourseStart, undefined, "[)");
+
+                const gapText = isCurrentGap
+                    ? `**You are here!** ${helper.formatDuration(gapDurationInMinutes)} until your next class.`
+                    : `**${helper.formatDuration(gapDurationInMinutes)}** gap`;
+
+                const gapContainer = new ContainerBuilder()
+                    .setAccentColor(isCurrentGap ? Colors.Orange : Colors.DarkGrey)
+                    .addTextDisplayComponents(t => t.setContent(gapText));
+
+                coursesContainers.push(gapContainer);
+            }
+        };
+
+        // still 0 after loop? means no courses today.
+        if (coursesContainers.length === 0) {
+            const noCoursesContainer = new ContainerBuilder()
+                .setAccentColor(Colors.DarkPurple)
                 .addTextDisplayComponents(
-                    t => t.setContent(`### ${c.MataKuliah}\n${isUpcoming ? `Starts in **${helper.formatDuration(upcomingInMinutes)}**` : ""}`)
-                )
-                .addTextDisplayComponents(
-                    t => t.setContent(`⏱️ ${timeField}\n🚪 ${roomField}\n👤 ${c.NamaDosen}`)
+                    t => t.setContent(`You have **no classes** for today.`)
                 );
 
-            courcesContainers.push(courseContainer);
+            coursesContainers.push(noCoursesContainer);
         }
-
         await interaction.reply({
-            components: [headerContainer, ...courcesContainers],
+            components: [headerContainer, ...coursesContainers],
             flags: [MessageFlags.IsComponentsV2]
         });
     }

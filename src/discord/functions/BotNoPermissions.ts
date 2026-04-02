@@ -1,10 +1,12 @@
 import { ChatInputCommandInteraction, Colors, ContainerBuilder, MessageFlags, PermissionResolvable } from "discord.js";
-import { toReadableNames } from "../../utils/Helper.js";
+import { Helper } from "../../amikom/Helper.js";
 import tags from "../../utils/Tags.js";
+
+const helper = new Helper();
 
 export default async function HandleBotNoPermissions(interaction: ChatInputCommandInteraction, permissions: PermissionResolvable[]): Promise<void> {
     try {
-        const readable = toReadableNames(permissions);
+        const readable = helper.toReadableNames(permissions);
         const permissionList = readable.join(", ");
         const plural = readable.length > 1 ? "s" : "";
 

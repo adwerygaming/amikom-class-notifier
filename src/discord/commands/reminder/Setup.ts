@@ -1,11 +1,15 @@
-import { ChannelType, ChatInputCommandInteraction, Client, SlashCommandBuilder } from "discord.js";
+import { ChannelType, ChatInputCommandInteraction, Client, Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { Subscriptions } from "../../../amikom/Subscriptions.js";
+import { Users } from "../../../amikom/Users.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
+import tags from "../../../utils/Tags.js";
 import HandleBotNoPermissions from "../../functions/BotNoPermissions.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
+import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedule.js";
 
 const subscriptions = new Subscriptions();
+const users = new Users();
 
 export default {
     metadata: new SlashCommandBuilder()
@@ -55,9 +59,70 @@ export default {
             return;
         }
 
-        await interaction.reply({
-            content: `Successfully set the reminder channel to ${channel}.`,
-            ephemeral: true,
-        });
+        const user = await users.getByDiscordId(interaction.user.id);
+
+        if (!user) {
+            await HandleUserHasNotSetupSchedule(interaction);
+            return;
+        }
+
+        try {
+            const sub = await subscriptions.add(user.id, {
+                guildId: interaction.guild.id,
+                channelId: channel.id
+            });
+
+            // channel test
+            try {
+                const guild = await interaction.guild.fetch();
+                const channels = await guild.channels.fetch(sub.channelId);
+                const channel = await channels?.fetch();
+
+                if (!channel) {
+                    // no perm
+                    await HandleUnresolvableChannel(interaction);
+                    return;
+                }
+
+                if (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement) {
+                    await HandleUnresolvableChannel(interaction);
+                    return;
+                }
+
+                const notifyContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.Purple)
+                    .addTextDisplayComponents(t => t.setContent(`<@${user.userId}> has configured this channel as class reminder. I will start sending reminders here.`));
+
+                await channel.send({
+                    components: [notifyContainer],
+                    flags: [MessageFlags.IsComponentsV2]
+                });
+            } catch (e) {
+                console.error(`[${tags.Error}] Failed to fetch channel [GID: ${interaction.guild.id} | CID: ${sub.channelId}]`);
+                console.error(e);
+
+                await HandleUnresolvableChannel(interaction);
+                return;
+            }
+
+            const successContainer = new ContainerBuilder()
+                .setAccentColor(Colors.Purple)
+                .addTextDisplayComponents(t => t.setContent("### Subscription successful"))
+                .addSeparatorComponents(s => s)
+                .addTextDisplayComponents(t => t.setContent(`Successfully set <#${sub.channelId}> as the reminder channel.`));
+
+            await interaction.reply({
+                components: [successContainer],
+                flags: [MessageFlags.IsComponentsV2]
+            });
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to set up reminder channel [GID: ${interaction.guild.id} | CID: ${channel.id} | UID: ${interaction.user.id}]`);
+            console.error(e);
+            
+            await interaction.reply({
+                content: `An error occurred while setting up the reminder channel. Please try again later.`,
+                ephemeral: true,
+            });
+        }
     }
 } as SlashCommandLayout;
