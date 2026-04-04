@@ -32,7 +32,9 @@ export default {
         const todayDayName = now.locale("id").format("dddd");
 
         const schedule = await schedules.getByUserId(user.id);
-        const todaySchedules = schedule.filter(s => s.Hari.toUpperCase() === todayDayName.toUpperCase());
+        const todaySchedules = schedule
+            .filter(s => s.Hari.toUpperCase() === todayDayName.toUpperCase())
+            .sort((a, b) => a.IdJam - b.IdJam);
         const todayFormatted = now.format("dddd, DD MMMM YYYY");
 
         const coursesContainers = [];

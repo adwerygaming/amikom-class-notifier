@@ -140,7 +140,7 @@ export default {
                     )
                     .addSeparatorComponents(s => s)
                     .addTextDisplayComponents(
-                        t => t.setContent(`Failed to assign <@${ctx.executorUserId}> with to their class. Try again later.`)
+                        t => t.setContent(`Failed to assign <@${ctx.executorUserId}> to their class. Try again later.`)
                     );
                 await interaction.update({
                     components: [failToAssignContainer],

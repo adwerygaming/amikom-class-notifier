@@ -30,6 +30,12 @@ export interface StateProp {
      * @example "123e4567-e89b-12d3-a456-426614174000"
      */
     scheduleId: string;
+
+    /**
+     * Discord Guild ID
+     * @example "598412465750933504"
+     */
+    guildId: string; 
 }
 
 const redis = redisClient.duplicate();
@@ -47,11 +53,11 @@ export class Schedules {
      * @param value The boolean value to set the state to.
      * @returns void
      */
-    async setState({ eventName, userId, scheduleId }: StateProp, value: boolean): Promise<void> {
+    async setState({ eventName, userId, scheduleId, guildId }: StateProp, value: boolean): Promise<void> {
         // you want to set this at least as long as 1 class could be. usually 1h 40m, 
         const ttlSeconds = 60 * 60 * 2; // 2 hours just to be safe
 
-        const key = `reminderState:${userId}:${eventName}:${scheduleId}`;
+        const key = `reminderState:${guildId}:${userId}:${eventName}:${scheduleId}`;
         await redis.setex(key, ttlSeconds, value ? "true" : "false");
     }
 
@@ -62,8 +68,8 @@ export class Schedules {
      * @param options.scheduleId That 1 row schedule ID that you want to get the state for.
      * @returns Promise<boolean> The boolean value representing the state.
      */
-    async getState({ eventName, userId, scheduleId }: StateProp): Promise<boolean> {
-        const key = `reminderState:${userId}:${eventName}:${scheduleId}`;
+    async getState({ eventName, userId, scheduleId, guildId }: StateProp): Promise<boolean> {
+        const key = `reminderState:${guildId}:${userId}:${eventName}:${scheduleId}`;
         const value = await redis.get(key);
         return value === "true";
     }

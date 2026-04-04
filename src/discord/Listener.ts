@@ -28,8 +28,22 @@ export class Listener {
                     return;
                 }
 
-                const data: ReminderPayload = JSON.parse(message) as ReminderPayload;
-                const { data: sch, metadata } = data;
+                let payload: ReminderPayload;
+
+                try {
+                    payload = JSON.parse(message) as ReminderPayload;
+                } catch (e) {
+                    console.error(`[${tags.Error}] Failed to parse reminder payload:`);
+                    console.error(e);
+                    return;
+                }
+
+                if (!payload.data || !payload.metadata) {
+                    console.warn(`[${tags.DiscordListener}] Received payload with missing data or metadata:`, payload);
+                    return;
+                }
+
+                const { data: sch, metadata } = payload;
                 const { subscriptions } = sch;
 
                 for (const sub of subscriptions) {
@@ -43,7 +57,7 @@ export class Listener {
                     const { start, end } = await helper.resolveClassTime({ time });
 
                     const durationMinutes = end.diff(start, "minutes");
-                    const diffInMinutes = now.diff(start, "minutes");
+                    const diffInMinutes = Math.max(0, start.diff(now, "minutes"));
                     const startFormatted = start.format("HH:mm");
                     const endFormatted = end.format("HH:mm");
                     const durationFormatted = helper.formatDuration(durationMinutes);
@@ -56,7 +70,8 @@ export class Listener {
                     const stateCheck: StateProp = {
                         eventName: `reminder_${metadata.minutesBefore}`,
                         userId: sub.userId,
-                        scheduleId: sch.id
+                        scheduleId: sch.id,
+                        guildId
                     };
                     const alreadyChecked = await schedules.getState(stateCheck);
 

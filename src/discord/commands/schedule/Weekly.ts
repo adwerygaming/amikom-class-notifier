@@ -41,7 +41,7 @@ export default {
             acc[courseDay].push(course);
             return acc;
         }, {} as Record<string, typeof schedule>);
-        const totalCOurses = schedule.length;
+        const totalCourses = schedule.length;
 
         //! 1 container = 1 day
         const coursesContainers = [];
@@ -51,7 +51,7 @@ export default {
                 t => t.setContent(`### Weekly Schedule`)
             )
             .addTextDisplayComponents(
-                t => t.setContent(`You have **${totalCOurses} class${totalCOurses !== 1 ? "es" : ""}** this week.`)
+                t => t.setContent(`You have **${totalCourses} class${totalCourses !== 1 ? "es" : ""}** this week.`)
             )
             .addSeparatorComponents(s => s)
             .addTextDisplayComponents(

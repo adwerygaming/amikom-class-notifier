@@ -25,6 +25,6 @@ export default async function HandleUserHasNotSetupSchedule(interaction: ChatInp
 
     await interaction.reply({
         components: [hasNotSetupScheduleContainer],
-        flags: [MessageFlags.IsComponentsV2]
+        flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
     });
 }

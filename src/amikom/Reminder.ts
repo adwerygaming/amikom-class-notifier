@@ -40,7 +40,7 @@ export class Reminder {
             console.log(`[${tags.Job}] Now is ${now.format("HH:mm:ss")}`);
             
             for (const minutes of triggerMinutes) {
-                const targetMoment = now.add(minutes, 'minutes');
+                const targetMoment = now.clone().add(minutes, 'minutes');
                 const targetTimeHHmm = targetMoment.format("HH:mm");
 
                 console.log(`[${tags.Job}] [${minutes}] Checking for classes starting at ${targetTimeHHmm}...`);

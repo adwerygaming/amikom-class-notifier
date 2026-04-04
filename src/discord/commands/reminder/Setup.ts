@@ -74,16 +74,6 @@ export default {
 
             // channel test
             try {
-                const guild = await interaction.guild.fetch();
-                const channels = await guild.channels.fetch(sub.channelId);
-                const channel = await channels?.fetch();
-
-                if (!channel) {
-                    // no perm
-                    await HandleUnresolvableChannel(interaction);
-                    return;
-                }
-
                 if (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement) {
                     await HandleUnresolvableChannel(interaction);
                     return;
