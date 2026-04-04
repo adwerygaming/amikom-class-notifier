@@ -47,28 +47,21 @@ export class Reminder {
 
                 const pendingSchedules = await schedules.getPendingReminders(targetTimeHHmm);
                 if (pendingSchedules.length === 0) {
-                    // console.log(`[${tags.Job}] [${minutes}] nothing.`);
                     continue;
                 }
 
                 for (const sch of pendingSchedules) {
-                    const { user, subscriptions } = sch;
+                    const isHappeningNow = minutes === 0;
 
-                    for (const sub of subscriptions) {
-                        const isHappeningNow = minutes === 0;
+                    const payload: ReminderPayload = {
+                        data: sch,
+                        metadata: {
+                            minutesBefore: minutes,
+                            isHappeningNow
+                        }
+                    };
 
-                        const payload: ReminderPayload = {
-                            data: sch,
-                            metadata: {
-                                minutesBefore: minutes,
-                                isHappeningNow
-                            }
-                        };
-
-                        await redis.publish(reminderChannelName, JSON.stringify(payload));
-
-                        console.log(`[${tags.Job}] Dispatch -> Channel: ${sub.channelId} | User: ${user.userId}`);
-                    }
+                    await redis.publish(reminderChannelName, JSON.stringify(payload));
                 }
             }
         } catch (error) {

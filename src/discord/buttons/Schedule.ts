@@ -15,6 +15,12 @@ export default {
         const action = data[0] as interactionActions;
 
         if (action == "start") {
+            const ctxId = data[1];
+
+            if (ctxId) {
+                await ContextManager.delete(ctxId);
+            }
+
             const majorInput = new TextInputBuilder()
                 .setCustomId("major")
                 .setRequired(true)

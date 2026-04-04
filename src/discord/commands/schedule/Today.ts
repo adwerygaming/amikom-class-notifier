@@ -55,7 +55,7 @@ export default {
             const course = todaySchedules[i];
 
             const now = moment().tz("Asia/Jakarta");
-            const { start: courseStart, end: courseEnd } = await helper.resolveClassTime({ time: course.Waktu });
+            const { start: courseStart, end: courseEnd } = await helper.resolveClassTime({ time: course.Waktu, now });
 
             // Calculations
             const duration = moment.duration(courseEnd.diff(courseStart));

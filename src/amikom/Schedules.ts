@@ -38,11 +38,40 @@ export interface StateProp {
     guildId: string; 
 }
 
+export interface OnGoingProp {
+    userId: string;
+    guildId: string;
+}
+
 const redis = redisClient.duplicate();
 
 export class Schedules {
     private db(): Knex.QueryBuilder<ScheduleSchema, ScheduleSchema[]> {
         return DatabaseClient<ScheduleSchema>("schedules");
+    }
+
+    /**
+     * Check if a user already on a ongoing class.
+     * @param options.userId User ID (Not Discord ID)
+     * @param options.guildId Discord Guild ID
+     * @returns boolean value indicating whether the user has an ongoing class or not.
+     */
+    async isOnGoing({ guildId, userId}: OnGoingProp): Promise<boolean> {
+        const key = `classOnGoing:${guildId}:${userId}`;
+        const value = await redis.get(key);
+        return value === "true";
+    }
+
+    /**
+     * Set state for user's on going class.
+     * @param options.userId User ID (Not Discord ID)
+     * @param options.guildId Discord Guild ID
+     * @param remainingSeconds number value of remaining seconds for a class.
+     * @returns void
+     */
+    async setOnGoing({ guildId, userId}: OnGoingProp, remainingSeconds: number): Promise<void> {
+        const key = `classOnGoing:${guildId}:${userId}`;
+        await redis.setex(key, remainingSeconds, "true");
     }
 
     /**

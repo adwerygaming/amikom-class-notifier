@@ -51,7 +51,6 @@ export class Listener {
 
                     const guildId = sub.guildId;
                     const channelId = sub.channelId;
-                    // const authorId = sub.userId;
 
                     const time = sch.Waktu;
                     const { start, end } = await helper.resolveClassTime({ time });
@@ -61,10 +60,21 @@ export class Listener {
                     const startFormatted = start.format("HH:mm");
                     const endFormatted = end.format("HH:mm");
                     const durationFormatted = helper.formatDuration(durationMinutes);
+                    const remainingSeconds = end.diff(moment(), "seconds");
                     const isHappeningNow = metadata.isHappeningNow;
 
                     const room = sch.Ruang;
                     const { string, type } = helper.resolveRoomCode(room);
+
+                    // overlapping check
+                    // TODO: i think it would be better to put this on the pub side insetad of sub side.
+                    if (!isHappeningNow) {
+                        const isOnGoing = await schedules.isOnGoing({ guildId, userId: sub.userId });
+                        if (isOnGoing) {
+                            console.log(`[${tags.DiscordListener}] Skipping reminder for user ${sub.userId} in guild ${guildId} because they have an ongoing class.`);
+                            continue;
+                        }
+                    }
 
                     // state check
                     const stateCheck: StateProp = {
@@ -74,7 +84,6 @@ export class Listener {
                         guildId
                     };
                     const alreadyChecked = await schedules.getState(stateCheck);
-
                     if (alreadyChecked) continue;
 
                     const reminderEmbed = new EmbedBuilder()
@@ -124,6 +133,10 @@ export class Listener {
                         });
 
                         await schedules.setState(stateCheck, true);
+
+                        if (isHappeningNow) {
+                            await schedules.setOnGoing({ guildId, userId: sub.userId }, remainingSeconds);
+                        }
                     } catch (e) {
                         console.error(`[${tags.DiscordListener}] Failed to send reminder message to channel ${channelId} in guild ${guildId}.`);
                         console.error(e);

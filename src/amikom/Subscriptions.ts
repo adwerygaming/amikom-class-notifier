@@ -20,8 +20,8 @@ export class Subscriptions {
 
     async add(userId: string, { guildId, channelId }: AddSubscriptionProp): Promise<SubscriptionSchema> {
         //! IMPORTANT
-        // User need to fill out users table first before adding subscription.
-        // because userId is `users` table id
+        //! User need to fill out users table first before adding subscription.
+        //! because userId is `users` table id
 
         try {
             const [res] = await this.db()
