@@ -47,20 +47,20 @@ export class Listener {
                 const { subscriptions } = sch;
 
                 for (const sub of subscriptions) {
-                    const now = moment();
+                    const now = moment().tz("Asia/Jakarta");
 
                     const guildId = sub.guildId;
                     const channelId = sub.channelId;
 
                     const time = sch.Waktu;
-                    const { start, end } = await helper.resolveClassTime({ time });
+                    const { start, end } = await helper.resolveClassTime({ time, now });
 
                     const durationMinutes = end.diff(start, "minutes");
                     const diffInMinutes = Math.max(0, start.diff(now, "minutes"));
                     const startFormatted = start.format("HH:mm");
                     const endFormatted = end.format("HH:mm");
                     const durationFormatted = helper.formatDuration(durationMinutes);
-                    const remainingSeconds = end.diff(moment(), "seconds");
+                    const remainingSeconds = end.diff(now, "seconds");
                     const isHappeningNow = metadata.isHappeningNow;
 
                     const room = sch.Ruang;

@@ -37,7 +37,7 @@ export class Helper {
      * convertStringTimeToMoment({ time: "08:30" }) // returns a moment object representing 8:30 AM on the current day
      */
     convertStringTimeToMoment({ time, now }: ConvertStringTimeToMomentProp): moment.Moment {
-        now = now || moment();
+        now = now || moment().tz("Asia/Jakarta");
         if (!time || !time.includes(":")) {
             throw new Error(`Invalid time format: ${time}. Expected format "HH:mm".`);
         }
@@ -60,7 +60,7 @@ export class Helper {
      * resolveClassTime({ time: "08:00-09:40" }) // returns { start: moment("08:00"), end: moment("09:40") }
      */
     resolveClassTime({ time, now }: ResolveClassTimeProp): ResolveClassTimeResult {
-        now = now || moment();
+        now = now || moment().tz("Asia/Jakarta");
         const [start, end] = time.split("-");
 
         return {
