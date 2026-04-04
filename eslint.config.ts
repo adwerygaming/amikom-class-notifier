@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 const config: Linter.Config[] = [
   js.configs.recommended,
 
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.strictTypeChecked,
 
   {
     files: ["**/*.ts"],
@@ -19,6 +19,7 @@ const config: Linter.Config[] = [
     rules: {
       "eol-last": ["error", "always"],
       "semi": ["error", "always"],
+      "@typescript-eslint/no-unnecessary-type-assertion": ["error", "always"],
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/explicit-function-return-type": "error",

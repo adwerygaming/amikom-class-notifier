@@ -118,7 +118,8 @@ export default {
                     .setAccentColor(Colors.Green)
                     .addTextDisplayComponents(t => t.setContent("### Schedule Uploaded Successfully"))
                     .addSeparatorComponents(s => s)
-                    .addTextDisplayComponents(t => t.setContent(`Your schedule has been uploaded and saved successfully.`));
+                    .addTextDisplayComponents(t => t.setContent(`Your schedule has been uploaded and saved successfully.`))
+                    .addTextDisplayComponents(t => t.setContent("- To view today schedules, run `/schedule today`\n- To view weekly schedules, run `/schedule weekly`\n- If you had a schedule change, run `/schedule setup` to update your schedule.\n\n- To set reminders, run `/reminder setup`"));
 
                 await interaction.update({
                     components: [completeContainer],

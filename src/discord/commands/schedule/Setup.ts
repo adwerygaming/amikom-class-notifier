@@ -1,7 +1,9 @@
 import { ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { Users } from "../../../amikom/Users.js";
+import { ContextManager } from "../../../database/ContextManager.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import { ScheduleSetupUserInfoContextData } from "../../modals/ScheduleClassInfo.js";
 
 const users = new Users();
 
@@ -26,13 +28,30 @@ export default {
         const menuContainer = new ContainerBuilder()
             .setAccentColor(Colors.Purple)
             .addTextDisplayComponents(
-                t => t.setContent(`## Schedule Setup`)
+                t => t.setContent(`### Schedule Setup`)
             )
             .addSeparatorComponents(
                 s => s
-            );
+        );
 
         if (user) {
+            const ctxData: ScheduleSetupUserInfoContextData = {
+                executorUserId: interaction.user.id,
+                major: user.major,
+                classNumber: user.class_number,
+                entryYear: user.entry_year
+            };
+
+            const ctxId = await ContextManager.create<ScheduleSetupUserInfoContextData>(ctxData);
+
+            const setupScheduleBtn = new ButtonBuilder()
+                .setCustomId(`schedule_${interaction.user.id}_confirm_${ctxId}`)
+                .setLabel("Change Schedule Data")
+                .setEmoji("📚")
+                .setStyle(ButtonStyle.Success);
+
+            const updateClassBtn = openModalBtn.setLabel("Update Class Information");
+
             menuContainer
                 .addTextDisplayComponents(
                     t => t.setContent(`**You already configured your class before.**`)
@@ -48,10 +67,10 @@ export default {
                 )
                 .addSeparatorComponents(s => s)
                 .addTextDisplayComponents(
-                    t => t.setContent(`If you want to update your class information, please click the button below to restart the setup process.`)
+                    t => t.setContent(`- If you want to update your class information, click **Update Class Information**.\n- If you want to just update your schedules, click **Change Schedule Data**.`)
                 )
                 .addActionRowComponents(
-                    r => r.addComponents(openModalBtn)
+                    r => r.addComponents(updateClassBtn, setupScheduleBtn)
                 );
         } else {
             menuContainer

@@ -21,7 +21,7 @@ export class Listener {
 
         await redis.subscribe(reminderChannelName);
 
-        await redis.on("message", async (channel, message) => {
+        redis.on("message", async (channel, message) => {
             if (channel === reminderChannelName) {
                 if (typeof message !== "string") {
                     console.warn(`[${tags.DiscordListener}] Received non-string message:`, message);
@@ -134,7 +134,7 @@ export class Listener {
 
                         await schedules.setState(stateCheck, true);
 
-                        if (isHappeningNow) {
+                        if (isHappeningNow && remainingSeconds > 0) {
                             await schedules.setOnGoing({ guildId, userId: sub.userId }, remainingSeconds);
                         }
                     } catch (e) {

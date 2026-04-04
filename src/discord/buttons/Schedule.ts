@@ -112,18 +112,15 @@ export default {
                 const savedContainer = new ContainerBuilder()
                     .setAccentColor(Colors.Purple)
                     .addTextDisplayComponents(
-                        t => t.setContent("## User Data Saved")
+                        t => t.setContent("### Schedule Setup")
                     )
                     .addSeparatorComponents(s => s)
                     .addTextDisplayComponents(
-                        t => t.setContent("**Your class information has been saved successfully.**")
-                    )
-                    .addTextDisplayComponents(
-                        t => t.setContent("Next, please upload your schedule following instructions below.")
+                        t => t.setContent("Please upload your schedule following instructions below.")
                     )
                     .addSeparatorComponents(s => s)
                     .addTextDisplayComponents(
-                        t => t.setContent("Instrcutions:")
+                        t => t.setContent("Instructions:")
                     )
                     .addTextDisplayComponents(
                         t => t.setContent(`${instructions.map((x, i) => `${i + 1}. ${x}`).join("\n")}`)
