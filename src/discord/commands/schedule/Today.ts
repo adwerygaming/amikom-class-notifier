@@ -55,7 +55,7 @@ export default {
             const course = todaySchedules[i];
 
             const now = moment().tz("Asia/Jakarta");
-            const { start: courseStart, end: courseEnd } = await helper.resolveClassTime({ time: course.Waktu, now });
+            const { start: courseStart, end: courseEnd } = helper.resolveClassTime({ time: course.Waktu, now });
 
             // Calculations
             const duration = moment.duration(courseEnd.diff(courseStart));
@@ -65,7 +65,7 @@ export default {
             const upcomingDiscordTimestamp = `<t:${Math.floor(courseStart.unix())}:R>`;
 
             // Header formatting
-            const title = `${course.MataKuliah}`;
+            const title = course.MataKuliah;
             const subtitle = `${course.JenisKuliah == "Praktikum" ? "-# Praktikum" : ""}\n${isUpcoming ? `Starts ${upcomingDiscordTimestamp}` : ""}`;
 
             // Time formatting
@@ -78,8 +78,8 @@ export default {
             const roomField = `**${room}** (${roomFormatted})`;
 
             // Lecturer formatting
-            const lecturer = `${course.NamaDosen}`;
-            const lecturerField = `${lecturer}`;
+            const lecturer = course.NamaDosen;
+            const lecturerField = lecturer;
 
             // Build container
             const courseContainer = new ContainerBuilder()
@@ -100,11 +100,11 @@ export default {
             coursesContainers.push(courseContainer);
 
             const nextCourse: ScheduleSchema | undefined = todaySchedules[i + 1];
-            if (!nextCourse) {
+            if (typeof nextCourse === "undefined") {
                 continue;
             }
 
-            const { start: nextCourseStart } = await helper.resolveClassTime({ time: nextCourse.Waktu });
+            const { start: nextCourseStart } = helper.resolveClassTime({ time: nextCourse.Waktu });
 
             // Gap calculation
             const hasGap = nextCourseStart.isAfter(courseEnd);

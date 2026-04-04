@@ -42,7 +42,7 @@ export default {
         }
 
         const botPermissions = channel.permissionsFor(botUser);
-        if (!botPermissions || !botPermissions.has(["ViewChannel", "SendMessages"])) {
+        if (!botPermissions.has(["ViewChannel", "SendMessages"])) {
             await HandleBotNoPermissions(interaction, ["ViewChannel", "SendMessages"]);
             return;
         }
@@ -103,7 +103,7 @@ export default {
 
             await interaction.reply({
                 components: [successContainer],
-                flags: [MessageFlags.IsComponentsV2]
+                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
             });
         } catch (e) {
             console.error(`[${tags.Error}] Failed to set up reminder channel [GID: ${interaction.guild.id} | CID: ${channel.id} | UID: ${interaction.user.id}]`);

@@ -180,7 +180,7 @@ export class Schedules {
             return res;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to set schedule to a user [UID: ${userId}]`);
-            console.error(`[${tags.Error}] Schedule: ${typeof schedule}, has ${schedule?.length} items.`);
+            console.error(`[${tags.Error}] Schedule: ${typeof schedule}, has ${schedule.length} items.`);
             console.error(e);
             throw new Error("Failed to set schedule to a user.", { cause: e });
         }

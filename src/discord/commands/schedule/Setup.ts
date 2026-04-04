@@ -42,7 +42,7 @@ export default {
                 entryYear: user.entry_year
             };
 
-            const ctxId = await ContextManager.create<ScheduleSetupUserInfoContextData>(ctxData);
+            const ctxId = await ContextManager.create(ctxData);
 
             const setupScheduleBtn = new ButtonBuilder()
                 .setCustomId(`schedule_${interaction.user.id}_confirm_${ctxId}`)
@@ -84,7 +84,7 @@ export default {
 
         await interaction.reply({
             components: [menuContainer],
-            flags: [MessageFlags.IsComponentsV2]
+            flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
         });
     }
 } as SlashCommandLayout;

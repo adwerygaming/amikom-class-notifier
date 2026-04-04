@@ -27,8 +27,10 @@ export class Reminder {
         console.log(`[${tags.Reminder}] Reminder service started.`);
         console.log(`[${tags.Reminder}] Checking intervals: ${checkIntervals.join(", ")} minutes.`);
 
-        setInterval(async () => {
-            await this.check(checkIntervals);
+        setInterval(() => {
+            void (async (): Promise<void> => {
+                await this.check(checkIntervals);
+            })();
         }, 30000);
 
         await this.check(checkIntervals);

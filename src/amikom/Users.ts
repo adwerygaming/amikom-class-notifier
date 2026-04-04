@@ -143,10 +143,6 @@ export class Users {
                 .merge(["major", "entry_year", "class_number"])
                 .returning("*");
 
-            if (!res) {
-                throw new Error("Failed to assign class to user.", { cause: "there is conflict. good luck." });
-            }
-
             return res;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to assign user to a class [UID: ${userId} | Major: ${major} | Entry Year: ${entry_year} | Class Number: ${class_number}]`);

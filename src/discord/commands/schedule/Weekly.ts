@@ -35,12 +35,12 @@ export default {
         const schedule = await schedules.getByUserId(user.id);
 
         // remapping to per day schedule
-        const weeklySchedules = schedule.reduce((acc, course) => {
+        const weeklySchedules = schedule.reduce<Record<string, typeof schedule>>((acc, course) => {
             const courseDay = helper.capitalizeWords(course.Hari);
-            if (!acc[courseDay]) acc[courseDay] = [];
+            if (typeof acc[courseDay] === "undefined") acc[courseDay] = [];
             acc[courseDay].push(course);
             return acc;
-        }, {} as Record<string, typeof schedule>);
+        }, {});
         const totalCourses = schedule.length;
 
         //! 1 container = 1 day
@@ -70,7 +70,7 @@ export default {
 
             for (let i = 0; i < courses.length; i++) {
                 const course = courses[i];
-                const { start: courseStart, end: courseEnd } = await helper.resolveClassTime({ time: course.Waktu });
+                const { start: courseStart, end: courseEnd } = helper.resolveClassTime({ time: course.Waktu });
                 const duration = moment.duration(courseEnd.diff(courseStart));
 
                 // Time formatting
@@ -83,17 +83,17 @@ export default {
                 const roomField = `**${room}** (${roomFormatted})`;
 
                 // Lecturer formatting
-                const lecturer = `${course.NamaDosen}`;
-                const lecturerField = `${lecturer}`;
+                const lecturer = course.NamaDosen;
+                const lecturerField = lecturer;
 
                 todayContainer.addTextDisplayComponents(t => t.setContent(`**${course.MataKuliah}**\n⏱️ ${timeField}\n🚪 ${roomField}\n👤 ${lecturerField}`));
 
                 const nextCourse: ScheduleSchema | undefined = courses[i + 1];
-                if (!nextCourse) {
+                if (typeof nextCourse === "undefined") {
                     continue;
                 }
 
-                const { start: nextCourseStart } = await helper.resolveClassTime({ time: nextCourse.Waktu, now });
+                const { start: nextCourseStart } = helper.resolveClassTime({ time: nextCourse.Waktu, now });
 
                 // Gap calculation
                 const hasGap = nextCourseStart.isAfter(courseEnd);

@@ -15,14 +15,14 @@ export default {
     async execute(_client, interaction) {
         if (!interaction.isFromMessage()) return;
 
-        const [uploadedFiles] = interaction.fields.getUploadedFiles("scheduleFile", true);
-
-        const scheduleFile = uploadedFiles?.[1] ?? null;
+        const uploadedFiles = interaction.fields.getUploadedFiles("scheduleFile", true);
+        const scheduleFile = uploadedFiles.first();
 
         const tryAgainBtn = new ButtonBuilder()
             .setCustomId(`schedule_${interaction.user.id}_submitFile`)
             .setLabel("Try again")
             .setStyle(ButtonStyle.Primary);
+
 
         if (!scheduleFile) {
             const noFileContainer = new ContainerBuilder()

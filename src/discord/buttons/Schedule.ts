@@ -2,6 +2,7 @@ import { ButtonBuilder, ButtonStyle, Colors, ContainerBuilder, FileUploadBuilder
 import { Users } from "../../amikom/Users.js";
 import { ContextManager } from "../../database/ContextManager.js";
 import { ButtonLayout } from "../../types/Discord.types.js";
+import tags from "../../utils/Tags.js";
 import HandleNoContext from "../functions/NoContext.js";
 import { ScheduleSetupUserInfoContextData } from "../modals/ScheduleClassInfo.js";
 
@@ -80,8 +81,6 @@ export default {
                     major: ctx.major
                 });
 
-                await ContextManager.delete(ctxId);
-
                 const amikomDashboardBtn = new ButtonBuilder()
                     .setStyle(ButtonStyle.Link)
                     .setLabel("Dashboard Mahasiswa")
@@ -123,7 +122,7 @@ export default {
                         t => t.setContent("Instructions:")
                     )
                     .addTextDisplayComponents(
-                        t => t.setContent(`${instructions.map((x, i) => `${i + 1}. ${x}`).join("\n")}`)
+                        t => t.setContent(instructions.map((x, i) => `${i + 1}. ${x}`).join("\n"))
                     )
                     .addSeparatorComponents(s => s)
                     .addActionRowComponents(r => r.addComponents(submissionBtn, amikomDashboardBtn, amikomApiBtn));
@@ -134,8 +133,6 @@ export default {
                 });
                 // saved the user class info. next is to do their schedule data.
             } catch {
-                await ContextManager.delete(ctxId);
-
                 const failToAssignContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
                     .addTextDisplayComponents(
@@ -149,6 +146,13 @@ export default {
                     components: [failToAssignContainer],
                     flags: [MessageFlags.IsComponentsV2]
                 });
+            }
+
+            try {
+                await ContextManager.delete(ctxId);
+            } catch (e) {
+                console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                console.error(e);
             }
         }
 

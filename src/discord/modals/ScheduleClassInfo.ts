@@ -13,9 +13,9 @@ export default {
     async execute(_client, interaction) {
         if (!interaction.isFromMessage()) return;
 
-        const major = await interaction.fields.getTextInputValue("major");
-        const classNumber = await interaction.fields.getTextInputValue("classNumber");
-        const entryYear = await interaction.fields.getTextInputValue("entryYear");
+        const major = interaction.fields.getTextInputValue("major");
+        const classNumber = interaction.fields.getTextInputValue("classNumber");
+        const entryYear = interaction.fields.getTextInputValue("entryYear");
 
         const ctxData: ScheduleSetupUserInfoContextData = {
             executorUserId: interaction.user.id,
@@ -24,7 +24,7 @@ export default {
             entryYear: parseFloat(entryYear)
         };
 
-        const ctxId = await ContextManager.create<ScheduleSetupUserInfoContextData>(ctxData);
+        const ctxId = await ContextManager.create(ctxData);
 
         const tryAgainBtn = new ButtonBuilder()
             .setCustomId(`schedule_${interaction.user.id}_start_${ctxId}`)

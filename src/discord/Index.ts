@@ -13,34 +13,38 @@ const listener = new Listener();
 
 const commandHandler = new CommandHandler();
 
-client.on(Events.ClientReady, async (bot: Client) => {
-  // loads commands
-  await commandHandler.loadCommands();
-  await commandHandler.loadDropdowns();
-  await commandHandler.loadButtons();
-  await commandHandler.loadModals();
+client.on(Events.ClientReady, (bot: Client) => {
+  void (async (): Promise<void> => {
+    // loads commands
+    await commandHandler.loadCommands();
+    await commandHandler.loadDropdowns();
+    await commandHandler.loadButtons();
+    await commandHandler.loadModals();
 
-  // register commands to discord
-  await commandHandler.registerCommands();
+    // register commands to discord
+    await commandHandler.registerCommands();
 
-  console.log('');
-  console.log(`[${tags.Discord}] Connected to Discord API.`);
-  console.log(`[${tags.Discord}] Bot Information:`);
-  console.log(`[${tags.Discord}] ID           : ${bot?.user?.id ?? '-'}`);
-  console.log(`[${tags.Discord}] Username     : ${bot?.user?.username ?? '-'}`);
-  console.log(`[${tags.Discord}] Display Name : ${bot?.user?.displayName ?? '-'}`);
-  console.log(`[${tags.Discord}] Tags         : ${bot?.user?.discriminator ?? '-'}`);
-  console.log(`[${tags.Discord}] Servers      : ${bot?.guilds.cache.size ?? '-'} Server${bot?.guilds?.cache?.size !== 1 ? 's' : ''}`);
-  console.log('');
+    console.log('');
+    console.log(`[${tags.Discord}] Connected to Discord API.`);
+    console.log(`[${tags.Discord}] Bot Information:`);
+    console.log(`[${tags.Discord}] ID           : ${bot.user?.id ?? '-'}`);
+    console.log(`[${tags.Discord}] Username     : ${bot.user?.username ?? '-'}`);
+    console.log(`[${tags.Discord}] Display Name : ${bot.user?.displayName ?? '-'}`);
+    console.log(`[${tags.Discord}] Tags         : ${bot.user?.discriminator ?? '-'}`);
+    console.log(`[${tags.Discord}] Servers      : ${bot.guilds.cache.size} Server${bot.guilds.cache.size !== 1 ? 's' : ''}`);
+    console.log('');
 
-  await listener.start();
+    await listener.start();
 
-  await reminder.start({
-    checkIntervals: [0, 5, 10, 15]
-  });
+    await reminder.start({
+      checkIntervals: [0, 5, 10, 15]
+    });
+  })();
 
 });
 
-client.on(Events.InteractionCreate, async interaction => {
-  await commandHandler.handleInteraction(interaction);
+client.on(Events.InteractionCreate, interaction => {
+  void (async (): Promise<void> => {
+    await commandHandler.handleInteraction(interaction);
+  })();
 });

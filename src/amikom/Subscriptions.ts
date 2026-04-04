@@ -78,7 +78,7 @@ export class Subscriptions {
                 .delete()
                 .returning("*");
 
-            return res ?? null;
+            return res;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to remove subscription [GID: ${guildId} | UID: ${userId}]`);
             console.error(e);

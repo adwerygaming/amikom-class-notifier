@@ -81,15 +81,15 @@ export class Helper {
         const roomType: RoomType = roomCode.includes("L") ? "Laboratorium" : "Ruang Kelas";
         const rooms = roomCode.split(".");
 
-        let building = rooms?.[0];
-        const floor = rooms?.[1];
-        const room = rooms?.[2];
+        let building = rooms[0];
+        const floor = rooms[1];
+        const room = rooms[2];
 
         if (!building || !floor || !room) {
             throw new Error(`Invalid room code format: ${roomCode}. Expected format "x.x.x" where x is an integer.`);
         }
 
-        // remove L in building part
+    // remove L in building part
         if (building.includes("L")) {
             building = building.replace("L", "").trimStart();
         }
@@ -144,7 +144,7 @@ export class Helper {
      * capitalizeWords("AMIkOM") // returns "Amikom"
      */
     capitalizeWords(text: string): string {
-        return text.replace(/\b([A-Za-z])([A-Za-z]*)/g, (_match, first, rest) => {
+        return text.replace(/\b([A-Za-z])([A-Za-z]*)/g, (_match, first: string, rest: string) => {
             return `${first.toUpperCase()}${rest.toLowerCase()}`;
         });
     }
