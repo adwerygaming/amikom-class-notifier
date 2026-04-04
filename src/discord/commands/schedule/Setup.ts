@@ -7,6 +7,10 @@ import { ScheduleSetupUserInfoContextData } from "../../modals/ScheduleClassInfo
 
 const users = new Users();
 
+/**
+ * Initiates the initial UI flow to upload and populate schedule data
+ * attached for a specific Discord user interaction.
+ */
 export default {
     metadata: new SlashCommandBuilder()
         .setName("setup")

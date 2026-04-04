@@ -13,11 +13,27 @@ interface RemoveSubscriptionProp {
     guildId: string
 }
 
+/**
+ * Handles operations related to subscriptions.
+ * Users must have an entry in the users table first since the userId references it.
+ */
 export class Subscriptions {
+    /**
+     * Retrieve the database query builder scoped to the subscriptions table.
+     * @returns A Knex query builder for SubscriptionSchema.
+     */
     private db(): Knex.QueryBuilder<SubscriptionSchema, SubscriptionSchema[]> {
         return DatabaseClient<SubscriptionSchema>("subscriptions");
     }
 
+    /**
+     * Add a new subscription for a user to receive notifications in a specific guild and channel.
+     * Upserts using `userId` and `guildId` as unique keys.
+     * 
+     * @param userId The internal user ID. Must exist in the `users` table.
+     * @param data Contains `guildId` and `channelId`.
+     * @returns The created or updated subscription record.
+     */
     async add(userId: string, { guildId, channelId }: AddSubscriptionProp): Promise<SubscriptionSchema> {
         //! IMPORTANT
         //! User need to fill out users table first before adding subscription.
@@ -34,6 +50,11 @@ export class Subscriptions {
                 .merge({ channelId })
                 .returning("*");
 
+    /**
+     * Retrieves all subscriptions associated with a specific guild ID.
+     * @param guildId The Discord Guild ID.
+     * @returns An array of subscription records.
+     */
             return res;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to add subscription [GID: ${guildId} | CID: ${channelId} | UID: ${userId}]`);
@@ -56,6 +77,11 @@ export class Subscriptions {
         }
     }
 
+    /**
+     * Retrieves all subscriptions across all guilds for a specific user ID.
+     * @param userId The internal user ID to look up.
+     * @returns An array of subscription records.
+     */
     async getByUserId(userId: string): Promise<SubscriptionSchema[]> {
         try {
             const res = await this.db()
@@ -70,6 +96,12 @@ export class Subscriptions {
         }
     }
 
+    /**
+     * Remove a subscription for a user in a specific guild. This will stop the user from receiving notifications in that guild.
+     * @param options.guildId Discord Guild ID
+     * @param options.userId Discord User ID
+     * @returns SubscriptionSchema | null
+     */
     async remove({ guildId, userId }: RemoveSubscriptionProp): Promise<SubscriptionSchema | null> {
         try {
             const [res] = await this.db()

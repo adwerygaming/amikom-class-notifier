@@ -12,6 +12,10 @@ const helper = new Helper();
 const schedules = new Schedules();
 
 export class Listener {
+    /**
+     * Start the background Listener loop to await incoming notification signals.
+     * This will connect to the internal task pub/sub bus to observe incoming classes.
+     */
     async start(): Promise<void> {
         await this.check();
     }

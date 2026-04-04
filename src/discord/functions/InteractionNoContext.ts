@@ -1,7 +1,7 @@
 import { ButtonInteraction, ChatInputCommandInteraction, Colors, ContainerBuilder, MessageFlags, ModalSubmitInteraction } from "discord.js";
 import tags from "../../utils/Tags.js";
 
-export default async function HandleNoContext(interaction: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction): Promise<void> {
+export default async function HandleInteractionNoContext(interaction: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction): Promise<void> {
     try {
         const noContxtContainer = new ContainerBuilder()
             .setAccentColor(Colors.DarkRed)

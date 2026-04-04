@@ -12,6 +12,10 @@ const users = new Users();
 const schedules = new Schedules();
 const helper = new Helper();
 
+/**
+ * Displays the user's full week schedule segmented by day.
+ * Includes duration, room code, and class type labels.
+ */
 export default {
     metadata: new SlashCommandBuilder()
         .setName("weekly")

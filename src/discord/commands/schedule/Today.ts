@@ -12,6 +12,10 @@ const users = new Users();
 const schedules = new Schedules();
 const helper = new Helper();
 
+/**
+ * Displays the user's schedule for today. 
+ * Formats the times, calculates durations, and presents a responsive UI layout.
+ */
 export default {
     metadata: new SlashCommandBuilder()
         .setName("today")

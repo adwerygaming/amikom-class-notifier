@@ -3,7 +3,7 @@ import { Users } from "../../amikom/Users.js";
 import { ContextManager } from "../../database/ContextManager.js";
 import { ButtonLayout } from "../../types/Discord.types.js";
 import tags from "../../utils/Tags.js";
-import HandleNoContext from "../functions/NoContext.js";
+import HandleInteractionNoContext from "../functions/InteractionNoContext.js";
 import { ScheduleSetupUserInfoContextData } from "../modals/ScheduleClassInfo.js";
 
 type interactionActions = "start" | "confirm" | "submitFile"
@@ -70,7 +70,7 @@ export default {
             const ctx = await ContextManager.get<ScheduleSetupUserInfoContextData>(ctxId);
 
             if (!ctx) {
-                await HandleNoContext(interaction);
+                await HandleInteractionNoContext(interaction);
                 return;
             }
 

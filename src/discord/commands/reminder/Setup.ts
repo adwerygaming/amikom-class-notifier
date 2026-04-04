@@ -11,6 +11,10 @@ import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedu
 const subscriptions = new Subscriptions();
 const users = new Users();
 
+/**
+ * Configure the channel for sending reminder pushes natively
+ * for a user within a target guild.
+ */
 export default {
     metadata: new SlashCommandBuilder()
         .setName("setup")

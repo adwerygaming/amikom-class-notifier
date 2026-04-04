@@ -36,6 +36,11 @@ export class Reminder {
         await this.check(checkIntervals);
     }
 
+    /**
+     * Iterate the assigned check intervals and publish events if a class is confirmed 
+     * on the specific offset matching the `triggerMinutes`.
+     * @param triggerMinutes The offsets in minutes to look ahead (e.g. 5, 10, 15).
+     */
     async check(triggerMinutes: number[]): Promise<void> {
         try {
             const now = moment().tz("Asia/Jakarta"); //.hour(6).minute(45).second(0);
