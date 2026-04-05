@@ -33,17 +33,17 @@ export class Listener {
                         return;
                     }
 
-                    let payload: ReminderPayload;
+                    let payload: ReminderPayload | null;
 
                     try {
-                        payload = JSON.parse(message) as ReminderPayload;
+                        payload = JSON.parse(message) as ReminderPayload | null;
                     } catch (e) {
                         console.error(`[${tags.Error}] Failed to parse reminder payload:`);
                         console.error(e);
                         return;
                     }
 
-                    if (!payload?.data || !payload?.metadata) {
+                    if (!payload) {
                         console.warn(`[${tags.DiscordListener}] Received payload with missing data or metadata.`);
                         return;
                     }
