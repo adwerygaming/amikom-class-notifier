@@ -45,31 +45,41 @@ export class Reminder {
         try {
             const now = moment().tz("Asia/Jakarta"); //.hour(6).minute(45).second(0);
             console.log(`[${tags.Job}] Now is ${now.format("HH:mm:ss")}`);
-            
-            for (const minutes of triggerMinutes) {
-                const targetMoment = now.clone().add(minutes, 'minutes');
-                const targetTimeHHmm = targetMoment.format("HH:mm");
 
-                console.log(`[${tags.Job}] [${minutes}] Checking for classes starting at ${targetTimeHHmm}...`);
+            const targetSlots = triggerMinutes.map(minutes => ({
+                minutes,
+                targetTimeHHmm: now.clone().add(minutes, 'minutes').format("HH:mm")
+            }));
+            const formattedTargetTimes = targetSlots.map(slot => slot.targetTimeHHmm);
 
-                const pendingSchedules = await schedules.getPendingReminders(targetTimeHHmm);
-                if (pendingSchedules.length === 0) {
+            const pendingSchedules = await schedules.getPendingReminders(formattedTargetTimes);
+            if (pendingSchedules.length === 0) {
+                return;
+            }
+
+            const minutesByTargetTime = new Map(targetSlots.map(slot => [slot.targetTimeHHmm, slot.minutes]));
+
+            for (const sch of pendingSchedules) {
+                const targetTimeHHmm = sch.Waktu.slice(0, 5);
+                const minutes = minutesByTargetTime.get(targetTimeHHmm);
+
+                if (typeof minutes === "undefined") {
                     continue;
                 }
 
-                for (const sch of pendingSchedules) {
-                    const isHappeningNow = minutes === 0;
+                console.log(`[${tags.Job}] [${minutes}] Checking for classes starting at ${targetTimeHHmm}...`);
 
-                    const payload: ReminderPayload = {
-                        data: sch,
-                        metadata: {
-                            minutesBefore: minutes,
-                            isHappeningNow
-                        }
-                    };
+                const isHappeningNow = minutes === 0;
 
-                    await redis.publish(reminderChannelName, JSON.stringify(payload));
-                }
+                const payload: ReminderPayload = {
+                    data: sch,
+                    metadata: {
+                        minutesBefore: minutes,
+                        isHappeningNow
+                    }
+                };
+
+                await redis.publish(reminderChannelName, JSON.stringify(payload));
             }
         } catch (error) {
             console.error(`[${tags.Error}] Error occured when checking reminders:`);

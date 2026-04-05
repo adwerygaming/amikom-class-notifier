@@ -14,6 +14,7 @@ const users = new Users();
 
 export interface RemoveSubscriptionContextData extends BaseContext {
     guildId: string;
+    channelId: string;
     userId: string
 }
 
@@ -71,7 +72,8 @@ export default {
             const removeSubscriptionContextData: RemoveSubscriptionContextData = {
                 executorUserId: interaction.user.id,
                 userId: existing.userId,
-                guildId: interaction.guild.id
+                guildId: interaction.guild.id,
+                channelId: channel.id
             };
 
             const ctxId = await ContextManager.create(removeSubscriptionContextData);

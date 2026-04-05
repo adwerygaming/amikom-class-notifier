@@ -104,7 +104,7 @@ export default {
                 continue;
             }
 
-            const { start: nextCourseStart } = helper.resolveClassTime({ time: nextCourse.Waktu });
+            const { start: nextCourseStart } = helper.resolveClassTime({ time: nextCourse.Waktu, now });
 
             // Gap calculation
             const hasGap = nextCourseStart.isAfter(courseEnd);

@@ -108,14 +108,25 @@ export class Schedules {
      * @param targetTime HH:mm format 
      * @returns GetAllSchedulesResult
      */
-    async getPendingReminders(targetTime: string): Promise<GetAllSchedulesResult[]> {
-        // TODO: try optimize with arrayed targetTime, bcs the caller is calling one by one. see amikom/Reminder.ts check function.
+    async getPendingReminders(targetTimes: string[]): Promise<GetAllSchedulesResult[]> {
+        if (targetTimes.length === 0) {
+            return [];
+        }
+
         try {
             const currentDay = moment().tz("Asia/Jakarta").locale("id").format("dddd").toUpperCase();
             const res = await this.db()
                 .where("schedules.Hari", currentDay)
-                .andWhere("schedules.Waktu", "like", `${targetTime}-%`)
                 .andWhere("schedules.isActive", true)
+                .andWhere(function () {
+                    targetTimes.forEach((targetTime, index) => {
+                        if (index === 0) {
+                            this.where("schedules.Waktu", "like", `${targetTime}-%`);
+                        } else {
+                            this.orWhere("schedules.Waktu", "like", `${targetTime}-%`);
+                        }
+                    });
+                })
                 .join("users", "schedules.userId", "users.id")
                 .leftJoin("subscriptions", "subscriptions.userId", "users.id")
                 .groupBy("schedules.id", "users.id")

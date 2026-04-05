@@ -43,6 +43,9 @@ export default {
             acc[courseDay].push(course);
             return acc;
         }, {});
+        for (const courses of Object.values(weeklySchedules)) {
+            courses.sort((a, b) => a.IdJam - b.IdJam);
+        }
         const totalCourses = schedule.length;
 
         //! 1 container = 1 day
@@ -66,7 +69,7 @@ export default {
 
             for (let i = 0; i < courses.length; i++) {
                 const course = courses[i];
-                const { start: courseStart, end: courseEnd } = helper.resolveClassTime({ time: course.Waktu });
+                const { start: courseStart, end: courseEnd } = helper.resolveClassTime({ time: course.Waktu, now });
                 const duration = moment.duration(courseEnd.diff(courseStart));
 
                 // Time formatting

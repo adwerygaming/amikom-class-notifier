@@ -43,10 +43,15 @@ export class Listener {
                         return;
                     }
 
+                    if (!payload?.data || !payload?.metadata) {
+                        console.warn(`[${tags.DiscordListener}] Received payload with missing data or metadata.`);
+                        return;
+                    }
+
                     const { data: sch, metadata } = payload;
                     const { subscriptions } = sch;
 
-                    if (subscriptions.length === 0 || !Array.isArray(subscriptions)) {
+                    if (!Array.isArray(subscriptions) || subscriptions.length === 0) {
                         return;
                     }
 

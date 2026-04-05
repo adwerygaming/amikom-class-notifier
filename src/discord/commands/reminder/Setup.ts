@@ -5,7 +5,6 @@ import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 import HandleBotNoPermissions from "../../functions/BotNoPermissions.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
-import HandleSubscriptionOnChannelNotFound from "../../functions/SubscriptionOnChannelNotFound.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
 import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedule.js";
 
@@ -57,15 +56,6 @@ export default {
 
         try {
             await interaction.deferReply({ ephemeral: true });
-
-            // 1 channel = 1 reminder rule.
-            const subs = await subscriptions.getByGuildId(interaction.guild.id);
-            const existing = subs.find(sub => sub.channelId === channel.id);
-
-            if (!existing) {
-                await HandleSubscriptionOnChannelNotFound(interaction, channel);
-                return;
-            }
 
             const user = await users.getByDiscordId(interaction.user.id);
 

@@ -15,8 +15,6 @@ export default {
     async execute(_client, interaction, data) {
         const action = data[0] as interactionActions;
 
-        console.log(data);
-
         if (action == "remove") {
             const ctxId = data[1];
             const ctxData = await ContextManager.get<RemoveSubscriptionContextData>(ctxId);
@@ -27,10 +25,8 @@ export default {
             }
 
             try {
-                const sub = await subscriptions.remove({
-                    guildId: ctxData.guildId,
-                    userId: ctxData.userId
-                });
+                const currentSubscriptions = await subscriptions.getByGuildId(ctxData.guildId);
+                const sub = currentSubscriptions.find(subscription => subscription.userId === ctxData.userId);
 
                 if (!sub) {
                     const notFoundContainer = new ContainerBuilder()
@@ -39,6 +35,11 @@ export default {
                         .addSeparatorComponents(s => s)
                         .addTextDisplayComponents(t => t.setContent(`Couldn't find your subscription on this channel. It may have already been removed.`));
 
+                    await interaction.update({
+                        components: [notFoundContainer],
+                        flags: [MessageFlags.IsComponentsV2]
+                    });
+
                     try {
                         await ContextManager.delete(ctxId);
                     } catch (e) {
@@ -46,10 +47,55 @@ export default {
                         console.error(e);
                     }
 
+                    return;
+                }
+
+                if (sub.channelId !== ctxData.channelId) {
+                    const staleContextContainer = new ContainerBuilder()
+                        .setAccentColor(Colors.DarkRed)
+                        .addTextDisplayComponents(t => t.setContent("### Reminder changed"))
+                        .addSeparatorComponents(s => s)
+                        .addTextDisplayComponents(t => t.setContent(`Your reminder channel has changed since this confirmation opened. Please run the remove command again.`));
+
+                    await interaction.update({
+                        components: [staleContextContainer],
+                        flags: [MessageFlags.IsComponentsV2]
+                    });
+
+                    try {
+                        await ContextManager.delete(ctxId);
+                    } catch (e) {
+                        console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                        console.error(e);
+                    }
+
+                    return;
+                }
+
+                const removedSub = await subscriptions.remove({
+                    guildId: ctxData.guildId,
+                    userId: ctxData.userId
+                });
+
+                if (!removedSub) {
+                    const notFoundContainer = new ContainerBuilder()
+                        .setAccentColor(Colors.DarkRed)
+                        .addTextDisplayComponents(t => t.setContent("### Subscription not found"))
+                        .addSeparatorComponents(s => s)
+                        .addTextDisplayComponents(t => t.setContent(`Couldn't find your subscription on this channel. It may have already been removed.`));
+
                     await interaction.update({
                         components: [notFoundContainer],
                         flags: [MessageFlags.IsComponentsV2]
                     });
+
+                    try {
+                        await ContextManager.delete(ctxId);
+                    } catch (e) {
+                        console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                        console.error(e);
+                    }
+
                     return;
                 }
 
@@ -80,10 +126,18 @@ export default {
                     .addSeparatorComponents(s => s)
                     .addTextDisplayComponents(t => t.setContent(`An error occurred while trying to remove your subscription. Please try again later.`));
 
-                await interaction.editReply({
+                await interaction.update({
                     components: [errorContainer],
                     flags: [MessageFlags.IsComponentsV2]
                 });
+
+                try {
+                    await ContextManager.delete(ctxId);
+                } catch (deleteError) {
+                    console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                    console.error(deleteError);
+                }
+
                 return;
             }
         }
