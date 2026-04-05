@@ -71,8 +71,19 @@ export default {
 
             if (!ctx) {
                 await HandleInteractionNoContext(interaction);
+
+                try {
+                    await ContextManager.delete(ctxId);
+                } catch (e) {
+                    console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                    console.error(e);
+                }
+
                 return;
             }
+
+            // save class info part
+            // for the schedule, refer to modals/ScheduleFileUpload.ts
 
             try {
                 await users.assignClass(ctx.executorUserId, {

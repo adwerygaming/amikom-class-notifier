@@ -19,7 +19,7 @@ const helper = new Helper();
 export default {
     metadata: new SlashCommandBuilder()
         .setName("today")
-        .setDescription("View your schedule for today"),
+        .setDescription("Show your classes scheduled for today."),
     execute: async (_client: Client, interaction: ChatInputCommandInteraction) => {
         if (!interaction.guild) {
             await HandleNoInteractionGuild(interaction);

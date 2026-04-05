@@ -20,7 +20,7 @@ export default async function HandleUserHasNotSetupSchedule(interaction: ChatInp
             )
             .addSectionComponents(
                 s => s.addTextDisplayComponents(
-                    t => t.setContent(`To use the schedule command, **you need to submit your class information & schedule data first** by using this button.`)
+                    t => t.setContent(`To continue, **you need to submit your class information and schedule data first** using this button.`)
                 )
                     .setButtonAccessory(() => submitClassInfoBtn)
             );

@@ -45,8 +45,6 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     CONSTRAINT subscriptions_user_guild_unique UNIQUE ("userId", "guildId")
 );
 
-
-
 CREATE OR REPLACE FUNCTION update_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN

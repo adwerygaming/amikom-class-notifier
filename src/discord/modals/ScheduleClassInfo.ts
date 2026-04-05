@@ -45,6 +45,13 @@ export default {
                 components: [badRequestContainer],
                 flags: [MessageFlags.IsComponentsV2]
             });
+
+            try {
+                await ContextManager.delete(ctxId);
+            } catch {
+                // Context cleanup is best-effort here.
+            }
+
             return;
         }
 

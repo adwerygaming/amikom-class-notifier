@@ -147,7 +147,10 @@ export class Listener {
                         }
                     }
                 }
-            })();
+            })().catch((e: unknown) => {
+                console.error(`[${tags.Error}] An error occurred in the reminder listener loop:`);
+                console.error(e);
+            });
         });
     }
 }

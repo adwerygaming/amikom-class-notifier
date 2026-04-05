@@ -109,6 +109,7 @@ export class Schedules {
      * @returns GetAllSchedulesResult
      */
     async getPendingReminders(targetTime: string): Promise<GetAllSchedulesResult[]> {
+        // TODO: try optimize with arrayed targetTime, bcs the caller is calling one by one. see amikom/Reminder.ts check function.
         try {
             const currentDay = moment().tz("Asia/Jakarta").locale("id").format("dddd").toUpperCase();
             const res = await this.db()
@@ -121,8 +122,10 @@ export class Schedules {
                 .select<GetAllSchedulesResult[]>(
                     // whole schedules
                     "schedules.*",
+                    
                     // whole user
                     DatabaseClient.raw(`row_to_json(users) as user`),
+                    
                     // all subscriptions of the user, if no subscription then return empty array
                     DatabaseClient.raw(`COALESCE(json_agg(subscriptions) FILTER (WHERE subscriptions.id IS NOT NULL), '[]') as subscriptions`)
                 );
@@ -163,7 +166,10 @@ export class Schedules {
     async set(userId: string, schedule: ClassSchedule[]): Promise<ScheduleSchema[]> {
         try {
             const res = await DatabaseClient.transaction(async trx => {
-                // delete
+                await trx("users")
+                    .where("id", userId)
+                    .forUpdate();
+
                 await this.db()
                     .transacting(trx)
                     .where("userId", userId)

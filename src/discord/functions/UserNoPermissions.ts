@@ -14,7 +14,7 @@ export default async function HandleUserNoPermissions(interaction: ChatInputComm
             .setAccentColor(Colors.DarkRed)
             .addTextDisplayComponents(
                 text => text.setContent("### Unauthorized")
-        )
+            )
             .addSeparatorComponents(sep => sep)
             .addTextDisplayComponents(
                 text => text.setContent(`You don't have permission to use this command. You need ${permissionList} permission${plural} to use this command.`)
@@ -28,7 +28,7 @@ export default async function HandleUserNoPermissions(interaction: ChatInputComm
         } else {
             await interaction.reply({
                 components: [unauthorizedContainer],
-                flags: [MessageFlags.IsComponentsV2]
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
             });
         }
     } catch (e) {

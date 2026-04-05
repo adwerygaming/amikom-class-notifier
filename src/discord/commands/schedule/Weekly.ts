@@ -15,7 +15,7 @@ const helper = new Helper();
 export default {
     metadata: new SlashCommandBuilder()
         .setName("weekly")
-        .setDescription("View your schedule for the week"),
+        .setDescription("Show your class schedule for the current week."),
     execute: async (_client: Client, interaction: ChatInputCommandInteraction) => {
         if (!interaction.guild) {
             await HandleNoInteractionGuild(interaction);
@@ -108,7 +108,7 @@ export default {
             coursesContainers.push(todayContainer);
         }
 
-        await interaction.reply({
+        await interaction.editReply({
             components: [headerContainer, ...coursesContainers],
             flags: [MessageFlags.IsComponentsV2]
         });

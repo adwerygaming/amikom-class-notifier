@@ -5,6 +5,7 @@ import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 import HandleBotNoPermissions from "../../functions/BotNoPermissions.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import HandleSubscriptionOnChannelNotFound from "../../functions/SubscriptionOnChannelNotFound.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
 import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedule.js";
 
@@ -14,10 +15,10 @@ const users = new Users();
 export default {
     metadata: new SlashCommandBuilder()
         .setName("setup")
-        .setDescription("Setup reminder channel")
+        .setDescription("Set a reminder channel for class notifications.")
         .addChannelOption(ch =>
             ch.setName("reminder_channel")
-                .setDescription("The channel where the reminder will be sent")
+                .setDescription("Choose the text or announcement channel to send class reminders to.")
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                 .setRequired(false)
         ),
@@ -37,7 +38,6 @@ export default {
         }
 
         const channel = channels.get(channelId);
-
         if (!channel) {
             await HandleUnresolvableChannel(interaction);
             return;
@@ -62,10 +62,8 @@ export default {
             const subs = await subscriptions.getByGuildId(interaction.guild.id);
             const existing = subs.find(sub => sub.channelId === channel.id);
 
-            if (existing) {
-                await interaction.editReply({
-                    content: `<#${channel.id}> is already set as reminder channel.`,
-                });
+            if (!existing) {
+                await HandleSubscriptionOnChannelNotFound(interaction, channel);
                 return;
             }
 

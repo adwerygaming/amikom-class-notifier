@@ -10,7 +10,7 @@ const users = new Users();
 export default {
     metadata: new SlashCommandBuilder()
         .setName("setup")
-        .setDescription("Setup your schedule data"),
+        .setDescription("Set up or update your class schedule profile."),
     execute: async (_client: Client, interaction: ChatInputCommandInteraction) => {
         if (!interaction.guild) {
             await HandleNoInteractionGuild(interaction);

@@ -5,6 +5,7 @@ import { BaseContext, ContextManager } from "../../../database/ContextManager.js
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
+import HandleSubscriptionOnChannelNotFound from "../../functions/SubscriptionOnChannelNotFound.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
 import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedule.js";
 
@@ -19,10 +20,10 @@ export interface RemoveSubscriptionContextData extends BaseContext {
 export default {
     metadata: new SlashCommandBuilder()
         .setName("remove")
-        .setDescription("Remove existing reminder channel")
+        .setDescription("Remove a reminder channel from this server.")
         .addChannelOption(ch =>
             ch.setName("reminder_channel")
-                .setDescription("The channel of the existing reminder you want to remove")
+                .setDescription("Choose the reminder channel to remove. Defaults to the current channel.")
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                 .setRequired(false)
         ),
@@ -51,28 +52,19 @@ export default {
         try {
             await interaction.deferReply();
 
-            // 1 channel = 1 reminder rule.
-            const subs = await subscriptions.getByGuildId(interaction.guild.id);
-            const existing = subs.find(sub => sub.channelId === channel.id);
-
-            if (!existing) {
-                const notFoundContainer = new ContainerBuilder()
-                    .setAccentColor(Colors.DarkRed)
-                    .addTextDisplayComponents(t => t.setContent("### Subscription not found"))
-                    .addSeparatorComponents(s => s)
-                    .addTextDisplayComponents(t => t.setContent(`Couldn't find any subscription on <#${channel.id}>. Please make sure you have set up a reminder on that channel before trying to remove it.`));
-
-                await interaction.editReply({
-                    components: [notFoundContainer],
-                    flags: [MessageFlags.IsComponentsV2]
-                });
+            const user = await users.getByDiscordId(interaction.user.id);
+            if (!user) {
+                await HandleUserHasNotSetupSchedule(interaction);
                 return;
             }
 
-            const user = await users.getById(existing.userId);
+            const subs = await subscriptions.getByGuildId(interaction.guild.id);
+            const existing = subs.find(sub =>
+                sub.userId === user.id && sub.channelId === channel.id
+            );
 
-            if (!user) {
-                await HandleUserHasNotSetupSchedule(interaction);
+            if (!existing) {
+                await HandleSubscriptionOnChannelNotFound(interaction, channel);
                 return;
             }
 
@@ -110,14 +102,14 @@ export default {
                 flags: [MessageFlags.IsComponentsV2]
             });
         } catch (e) {
-            console.error(`[${tags.Error}] Failed to set up reminder channel [GID: ${interaction.guild.id} | CID: ${channel.id} | UID: ${interaction.user.id}]`);
+            console.error(`[${tags.Error}] Failed to remove reminder channel [GID: ${interaction.guild.id} | CID: ${channel.id} | UID: ${interaction.user.id}]`);
             console.error(e);
 
             const errorContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
-                .addTextDisplayComponents(t => t.setContent("### Failed to set up reminder channel"))
+                .addTextDisplayComponents(t => t.setContent("### Failed to remove reminder channel"))
                 .addSeparatorComponents(s => s)
-                .addTextDisplayComponents(t => t.setContent(`An error occurred while setting up the reminder channel. Please try again later.`));
+                .addTextDisplayComponents(t => t.setContent(`An error occurred while removing the reminder channel. Please try again later.`));
 
             await interaction.editReply({
                 components: [errorContainer],

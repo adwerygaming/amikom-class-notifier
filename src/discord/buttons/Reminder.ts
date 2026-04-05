@@ -26,8 +26,6 @@ export default {
                 return;
             }
 
-            console.log(ctxData);
-
             try {
                 const sub = await subscriptions.remove({
                     guildId: ctxData.guildId,
@@ -40,6 +38,13 @@ export default {
                         .addTextDisplayComponents(t => t.setContent("### Subscription not found"))
                         .addSeparatorComponents(s => s)
                         .addTextDisplayComponents(t => t.setContent(`Couldn't find your subscription on this channel. It may have already been removed.`));
+
+                    try {
+                        await ContextManager.delete(ctxId);
+                    } catch (e) {
+                        console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                        console.error(e);
+                    }
 
                     await interaction.update({
                         components: [notFoundContainer],
@@ -58,6 +63,13 @@ export default {
                     components: [successContainer],
                     flags: [MessageFlags.IsComponentsV2]
                 });
+
+                try {
+                    await ContextManager.delete(ctxId);
+                } catch (e) {
+                    console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                    console.error(e);
+                }
             } catch (e) {
                 console.error(`[${tags.Error}] Failed to remove subscription [GID: ${ctxData.guildId} | UID: ${ctxData.userId}]`);
                 console.error(e);
@@ -82,6 +94,7 @@ export default {
 
             if (!ctxData) {
                 await HandleInteractionNoContext(interaction);
+
                 return;
             }
 
@@ -95,6 +108,13 @@ export default {
                 components: [abortContainer],
                 flags: [MessageFlags.IsComponentsV2]
             });
+
+            try {
+                await ContextManager.delete(ctxId);
+            } catch (e) {
+                console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                console.error(e);
+            }
         }
     }
 } as ButtonLayout;
