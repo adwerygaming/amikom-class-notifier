@@ -20,10 +20,17 @@ export default async function HandleBotNoPermissions(interaction: ChatInputComma
                 text => text.setContent(`I don't have permission to use this command. I need ${permissionList} permission${plural} to use this command.`)
             );
 
-        await interaction.reply({
-            components: [unauthorizedContainer],
-            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
-        });
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({
+                components: [unauthorizedContainer],
+                flags: [MessageFlags.IsComponentsV2]
+            });
+        } else {
+            await interaction.reply({
+                components: [unauthorizedContainer],
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
+            });
+        }
     } catch (e) {
         console.error(`[${tags.Error}] Failed to handle Bot has no required permissions situation.`);
         console.error(e);

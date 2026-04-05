@@ -11,10 +11,17 @@ export default async function HandleNoScheduleLookupData(interaction: ChatInputC
                 text => text.setContent("There is no schedule data found matching your assigned class. Please ask your server admin to set the schedule for your class using the `/schedule set` command.")
             );
 
-        await interaction.editReply({
-            components: [noScheduleDataContainer],
-            flags: [MessageFlags.IsComponentsV2],
-        });
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({
+                components: [noScheduleDataContainer],
+                flags: [MessageFlags.IsComponentsV2]
+            });
+        } else {
+            await interaction.reply({
+                components: [noScheduleDataContainer],
+                flags: [MessageFlags.IsComponentsV2]
+            });
+        }
     } catch (e) {
         console.error(`[${tags.Error}] Failed to handle No Schedule Lookup Data situation.`);
         console.error(e);

@@ -34,14 +34,10 @@ export default {
         if (major.length == 0 || classNumber.length == 0 || entryYear.length == 0 || isNaN(parseInt(classNumber)) || isNaN(parseFloat(entryYear))) {
             const badRequestContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
-                .addTextDisplayComponents(
-                    t => t.setContent(`### Bad Input`)
-                )
+                .addTextDisplayComponents(t => t.setContent(`### Bad Input`))
                 .addSeparatorComponents(s => s)
                 .addSectionComponents(
-                    s => s.addTextDisplayComponents(
-                        t => t.setContent(`**Invalid Input**: Make sure you have filled all the required fields properly.`)
-                    )
+                    s => s.addTextDisplayComponents(t => t.setContent(`**Invalid Input**: Make sure you have filled all the required fields properly.`))
                         .setButtonAccessory(() => tryAgainBtn)
                 );
 
@@ -63,29 +59,15 @@ export default {
 
         const confirmContainer = new ContainerBuilder()
             .setAccentColor(Colors.DarkPurple)
-            .addTextDisplayComponents(
-                t => t.setContent(`### Confirm`)
-            )
-            .addTextDisplayComponents(
-                t => t.setContent(`Please check again your data below. Make sure it's correct.`)
-            )
+            .addTextDisplayComponents(t => t.setContent(`### Confirm`))
+            .addTextDisplayComponents(t => t.setContent(`Please check again your data below. Make sure it's correct.`))
             .addSeparatorComponents(s => s)
-            .addTextDisplayComponents(
-                t => t.setContent(`Major: **${major}**`)
-            )
-            .addTextDisplayComponents(
-                t => t.setContent(`Class Number: **${classNumber}**`)
-            )
-            .addTextDisplayComponents(
-                t => t.setContent(`Entry Year: **${entryYear}**`)
-            )
-            .addTextDisplayComponents(
-                t => t.setContent(`> You are in ${major} ${classNumber}, joined Amikom on ${entryYear}`)
-            )
+            .addTextDisplayComponents(t => t.setContent(`Major: **${major}**`))
+            .addTextDisplayComponents(t => t.setContent(`Class Number: **${classNumber}**`))
+            .addTextDisplayComponents(t => t.setContent(`Entry Year: **${entryYear}**`))
+            .addTextDisplayComponents(t => t.setContent(`> You are in ${major} ${classNumber}, joined Amikom on ${entryYear}`))
             .addSeparatorComponents(s => s)
-            .addActionRowComponents(
-                r => r.addComponents(yesBtn, noBtn)
-            );
+            .addActionRowComponents(r => r.addComponents(yesBtn, noBtn));
 
         await interaction.update({
             components: [confirmContainer],

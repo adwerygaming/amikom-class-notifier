@@ -12,10 +12,6 @@ const users = new Users();
 const schedules = new Schedules();
 const helper = new Helper();
 
-/**
- * Displays the user's full week schedule segmented by day.
- * Includes duration, room code, and class type labels.
- */
 export default {
     metadata: new SlashCommandBuilder()
         .setName("weekly")
@@ -25,6 +21,8 @@ export default {
             await HandleNoInteractionGuild(interaction);
             return;
         }
+
+        await interaction.deferReply();
 
         const user = await users.getByDiscordId(interaction.user.id);
         if (!user) {
@@ -51,16 +49,10 @@ export default {
         const coursesContainers = [];
         const headerContainer = new ContainerBuilder()
             .setAccentColor(Colors.Purple)
-            .addTextDisplayComponents(
-                t => t.setContent(`### Weekly Schedule`)
-            )
-            .addTextDisplayComponents(
-                t => t.setContent(`You have **${totalCourses} class${totalCourses !== 1 ? "es" : ""}** this week.`)
-            )
+            .addTextDisplayComponents(t => t.setContent(`### Weekly Schedule`))
+            .addTextDisplayComponents(t => t.setContent(`You have **${totalCourses} class${totalCourses !== 1 ? "es" : ""}** this week.`))
             .addSeparatorComponents(s => s)
-            .addTextDisplayComponents(
-                t => t.setContent(`🗓️ **${todayFormatted}**`)
-        );
+            .addTextDisplayComponents(t => t.setContent(`🗓️ **${todayFormatted}**`));
 
         for (const [day, courses] of Object.entries(weeklySchedules)) {
             // per day

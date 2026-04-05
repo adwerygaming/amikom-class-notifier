@@ -1,9 +1,9 @@
-import { ChannelType, ChatInputCommandInteraction, Client, Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import { ButtonBuilder, ButtonStyle, ChannelType, ChatInputCommandInteraction, Client, Colors, ContainerBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { Subscriptions } from "../../../amikom/Subscriptions.js";
 import { Users } from "../../../amikom/Users.js";
+import { BaseContext, ContextManager } from "../../../database/ContextManager.js";
 import { SlashCommandLayout } from "../../../types/Discord.types.js";
 import tags from "../../../utils/Tags.js";
-import HandleBotNoPermissions from "../../functions/BotNoPermissions.js";
 import HandleNoInteractionGuild from "../../functions/NoInteractionGuild.js";
 import HandleUnresolvableChannel from "../../functions/UnresolveableChannel.js";
 import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedule.js";
@@ -11,13 +11,18 @@ import HandleUserHasNotSetupSchedule from "../../functions/UserHasNotSetupSchedu
 const subscriptions = new Subscriptions();
 const users = new Users();
 
+export interface RemoveSubscriptionContextData extends BaseContext {
+    guildId: string;
+    userId: string
+}
+
 export default {
     metadata: new SlashCommandBuilder()
-        .setName("setup")
-        .setDescription("Setup reminder channel")
+        .setName("remove")
+        .setDescription("Remove existing reminder channel")
         .addChannelOption(ch =>
             ch.setName("reminder_channel")
-                .setDescription("The channel where the reminder will be sent")
+                .setDescription("The channel of the existing reminder you want to remove")
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                 .setRequired(false)
         ),
@@ -43,54 +48,65 @@ export default {
             return;
         }
 
-        const botUser = interaction.guild.members.me;
-        if (!botUser) {
-            await HandleUnresolvableChannel(interaction);
-            return;
-        }
-
-        const botPermissions = channel.permissionsFor(botUser);
-        if (!botPermissions.has(["ViewChannel", "SendMessages"])) {
-            await HandleBotNoPermissions(interaction, ["ViewChannel", "SendMessages"]);
-            return;
-        }
-
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply();
 
             // 1 channel = 1 reminder rule.
             const subs = await subscriptions.getByGuildId(interaction.guild.id);
             const existing = subs.find(sub => sub.channelId === channel.id);
 
-            if (existing) {
+            if (!existing) {
+                const notFoundContainer = new ContainerBuilder()
+                    .setAccentColor(Colors.DarkRed)
+                    .addTextDisplayComponents(t => t.setContent("### Subscription not found"))
+                    .addSeparatorComponents(s => s)
+                    .addTextDisplayComponents(t => t.setContent(`Couldn't find any subscription on <#${channel.id}>. Please make sure you have set up a reminder on that channel before trying to remove it.`));
+
                 await interaction.editReply({
-                    content: `<#${channel.id}> is already set as reminder channel.`,
+                    components: [notFoundContainer],
+                    flags: [MessageFlags.IsComponentsV2]
                 });
                 return;
             }
 
-            const user = await users.getByDiscordId(interaction.user.id);
+            const user = await users.getById(existing.userId);
 
             if (!user) {
                 await HandleUserHasNotSetupSchedule(interaction);
                 return;
             }
 
-            const sub = await subscriptions.add(user.id, {
-                guildId: interaction.guild.id,
-                channelId: channel.id
-            });
+            const removeSubscriptionContextData: RemoveSubscriptionContextData = {
+                executorUserId: interaction.user.id,
+                userId: existing.userId,
+                guildId: interaction.guild.id
+            };
 
-            const successContainer = new ContainerBuilder()
-                .setAccentColor(Colors.Purple)
-                .addTextDisplayComponents(t => t.setContent("### Subscription successful"))
-                .addTextDisplayComponents(t => t.setContent(`**You have successfully set <#${sub.channelId}> as your reminder channel.** I Will start sending reminders from now on.`))
+            const ctxId = await ContextManager.create(removeSubscriptionContextData);
+
+            const unsubscribeBtn = new ButtonBuilder()
+                .setCustomId(`reminder_${interaction.user.id}_remove_${ctxId}`)
+                .setLabel("Remove Reminder")
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji("🗑️");
+
+            const abortBtn = new ButtonBuilder()
+                .setCustomId(`reminder_${interaction.user.id}_abort_${ctxId}`)
+                .setLabel("Abort")
+                .setStyle(ButtonStyle.Secondary);
+
+            const confirmRemovalContainer = new ContainerBuilder()
+                .setAccentColor(Colors.Orange)
+                .addTextDisplayComponents(t => t.setContent("### Confirm Removal"))
                 .addSeparatorComponents(s => s)
+                .addTextDisplayComponents(t => t.setContent(`**Are you sure, you want to remove reminder on <#${channel.id}> ?**`))
+                .addTextDisplayComponents(t => t.setContent(`If you **remove** this reminder, you will no longer receive notifications about your class as below:`))
                 .addTextDisplayComponents(t => t.setContent(`- Major: **${user.major}**\n- Class Number: **${user.class_number}**\n- Entry Year: **${user.entry_year}**`))
-                .addSeparatorComponents(s => s);
+                .addSeparatorComponents(s => s)
+                .addActionRowComponents(r => r.addComponents(unsubscribeBtn, abortBtn));
 
             await interaction.editReply({
-                components: [successContainer],
+                components: [confirmRemovalContainer],
                 flags: [MessageFlags.IsComponentsV2]
             });
         } catch (e) {

@@ -28,11 +28,11 @@ export class Subscriptions {
 
     /**
      * Add a new subscription for a user to receive notifications in a specific guild and channel.
-     * Upserts using `userId` and `guildId` as unique keys.
-     * 
+     * Upsert using `userId` and `guildId` as unique keys.
      * @param userId The internal user ID. Must exist in the `users` table.
-     * @param data Contains `guildId` and `channelId`.
-     * @returns The created or updated subscription record.
+     * @param options.guildId Discord Guild ID
+     * @param options.channelId Discord Channel ID where notifications will be sent
+     * @returns SubscriptionSchema of the newly added or updated subscription.
      */
     async add(userId: string, { guildId, channelId }: AddSubscriptionProp): Promise<SubscriptionSchema> {
         //! IMPORTANT
@@ -50,11 +50,6 @@ export class Subscriptions {
                 .merge({ channelId })
                 .returning("*");
 
-    /**
-     * Retrieves all subscriptions associated with a specific guild ID.
-     * @param guildId The Discord Guild ID.
-     * @returns An array of subscription records.
-     */
             return res;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to add subscription [GID: ${guildId} | CID: ${channelId} | UID: ${userId}]`);
@@ -63,6 +58,11 @@ export class Subscriptions {
         }
     }
 
+    /**
+     * Retrieves all subscriptions associated with a specific guild ID.
+     * @param guildId The Discord Guild ID.
+     * @returns An array of subscription records.
+     */
     async getByGuildId(guildId: string): Promise<SubscriptionSchema[]> {
         try {
             const res = await this.db()
@@ -99,18 +99,18 @@ export class Subscriptions {
     /**
      * Remove a subscription for a user in a specific guild. This will stop the user from receiving notifications in that guild.
      * @param options.guildId Discord Guild ID
-     * @param options.userId Discord User ID
+     * @param options.userId User ID
      * @returns SubscriptionSchema | null
      */
     async remove({ guildId, userId }: RemoveSubscriptionProp): Promise<SubscriptionSchema | null> {
         try {
-            const [res] = await this.db()
+            const res = await this.db()
                 .where("guildId", guildId)
                 .andWhere("userId", userId)
                 .delete()
                 .returning("*");
 
-            return res;
+            return res.length > 0 ? res[0] : null;
         } catch (e) {
             console.error(`[${tags.Error}] Failed to remove subscription [GID: ${guildId} | UID: ${userId}]`);
             console.error(e);

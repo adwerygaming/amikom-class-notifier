@@ -10,10 +10,17 @@ export default async function HandleNoInteractionGuild(interaction: ChatInputCom
                 text => text.setContent(`This command can only be used in a server.`)
             );
 
-        await interaction.reply({
-            components: [noGuildContainer],
-            flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-        });
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({
+                components: [noGuildContainer],
+                flags: [MessageFlags.IsComponentsV2]
+            });
+        } else {
+            await interaction.reply({
+                components: [noGuildContainer],
+                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+            });
+        }
     } catch (e) {
         console.error(`[${tags.Error}] Failed to handle No Interaction Guild situation.`);
         console.error(e);

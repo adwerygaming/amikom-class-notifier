@@ -13,10 +13,17 @@ export default async function HandleInteractionNoContext(interaction: ChatInputC
                 t => t.setContent(`**Context Loss**: Please report this incident to developer. This is not meant to happen. **Please try again later.**`)
             );
 
-        await interaction.reply({
-            components: [noContxtContainer],
-            flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
-        });
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({
+                components: [noContxtContainer],
+                flags: [MessageFlags.IsComponentsV2]
+            });
+        } else {
+            await interaction.reply({
+                components: [noContxtContainer],
+                flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral]
+            });
+        }
     } catch (e) {
         console.error(`[${tags.Error}] Failed to handle No Context situation.`);
         console.error(e);

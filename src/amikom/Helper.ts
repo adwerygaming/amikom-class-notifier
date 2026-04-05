@@ -78,8 +78,9 @@ export class Helper {
      * resolveRoomCode("05.03.01") // returns { type: "Ruang Kelas", building: 5, floor: 3, room: 1, string: "Gedung 5, Lantai 3, Ruang ke 1" }
      */
     resolveRoomCode(roomCode: string): ResolvedRoomData {
-        const roomType: RoomType = roomCode.includes("L") ? "Laboratorium" : "Ruang Kelas";
         const rooms = roomCode.split(".");
+        const isLab = roomCode.includes("L");
+        const roomType: RoomType = isLab ? "Laboratorium" : "Ruang Kelas";
 
         let building = rooms[0];
         const floor = rooms[1];
@@ -89,8 +90,8 @@ export class Helper {
             throw new Error(`Invalid room code format: ${roomCode}. Expected format "x.x.x" where x is an integer.`);
         }
 
-    // remove L in building part
-        if (building.includes("L")) {
+        // remove L in building part when it's a lab
+        if (isLab) {
             building = building.replace("L", "").trimStart();
         }
 

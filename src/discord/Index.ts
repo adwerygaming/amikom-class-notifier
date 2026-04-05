@@ -15,13 +15,10 @@ const commandHandler = new CommandHandler();
 
 client.on(Events.ClientReady, (bot: Client) => {
   void (async (): Promise<void> => {
-    // loads commands
     await commandHandler.loadCommands();
     await commandHandler.loadDropdowns();
     await commandHandler.loadButtons();
     await commandHandler.loadModals();
-
-    // register commands to discord
     await commandHandler.registerCommands();
 
     console.log('');
@@ -39,12 +36,17 @@ client.on(Events.ClientReady, (bot: Client) => {
     await reminder.start({
       checkIntervals: [0, 5, 10, 15]
     });
-  })();
-
+  })().catch((e: unknown) => {
+    console.error(`[${tags.Error}] An error occurred during bot ready event.`);
+    console.error(e);
+  });
 });
 
 client.on(Events.InteractionCreate, interaction => {
   void (async (): Promise<void> => {
     await commandHandler.handleInteraction(interaction);
-  })();
+  })().catch((e: unknown) => {
+    console.error(`[${tags.Error}] An error occurred while handling interaction.`);
+    console.error(e);
+  });
 });

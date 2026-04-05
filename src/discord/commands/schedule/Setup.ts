@@ -7,10 +7,6 @@ import { ScheduleSetupUserInfoContextData } from "../../modals/ScheduleClassInfo
 
 const users = new Users();
 
-/**
- * Initiates the initial UI flow to upload and populate schedule data
- * attached for a specific Discord user interaction.
- */
 export default {
     metadata: new SlashCommandBuilder()
         .setName("setup")
@@ -31,12 +27,8 @@ export default {
 
         const menuContainer = new ContainerBuilder()
             .setAccentColor(Colors.Purple)
-            .addTextDisplayComponents(
-                t => t.setContent(`### Schedule Setup`)
-            )
-            .addSeparatorComponents(
-                s => s
-        );
+            .addTextDisplayComponents(t => t.setContent(`### Schedule Setup`))
+            .addSeparatorComponents(s => s);
 
         if (user) {
             const ctxData: ScheduleSetupUserInfoContextData = {
@@ -57,33 +49,17 @@ export default {
             const updateClassBtn = openModalBtn.setLabel("Update Class Information");
 
             menuContainer
-                .addTextDisplayComponents(
-                    t => t.setContent(`**You already configured your class before.**`)
-                )
-                .addTextDisplayComponents(
-                    t => t.setContent(`Major: **${user.major}**`)
-                )
-                .addTextDisplayComponents(
-                    t => t.setContent(`Class Number: **${user.class_number}**`)
-                )
-                .addTextDisplayComponents(
-                    t => t.setContent(`Entry Year: **${user.entry_year}**`)
-                )
+                .addTextDisplayComponents(t => t.setContent(`**You already configured your class before.**`))
+                .addTextDisplayComponents(t => t.setContent(`Major: **${user.major}**`))
+                .addTextDisplayComponents(t => t.setContent(`Class Number: **${user.class_number}**`))
+                .addTextDisplayComponents(t => t.setContent(`Entry Year: **${user.entry_year}**`))
                 .addSeparatorComponents(s => s)
-                .addTextDisplayComponents(
-                    t => t.setContent(`- If you want to update your class information, click **Update Class Information**.\n- If you want to just update your schedules, click **Change Schedule Data**.`)
-                )
-                .addActionRowComponents(
-                    r => r.addComponents(updateClassBtn, setupScheduleBtn)
-                );
+                .addTextDisplayComponents(t => t.setContent(`- If you want to update your class information, click **Update Class Information**.\n- If you want to just update your schedules, click **Change Schedule Data**.`))
+                .addActionRowComponents(r => r.addComponents(updateClassBtn, setupScheduleBtn));
         } else {
             menuContainer
-                .addTextDisplayComponents(
-                    t => t.setContent(`Click the button below to submit your class information.`)
-                )
-                .addActionRowComponents(
-                    r => r.addComponents(openModalBtn)
-                );
+                .addTextDisplayComponents(t => t.setContent(`Click the button below to submit your class information.`))
+                .addActionRowComponents(r => r.addComponents(openModalBtn));
         }
 
         await interaction.reply({

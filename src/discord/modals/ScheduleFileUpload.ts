@@ -23,7 +23,6 @@ export default {
             .setLabel("Try again")
             .setStyle(ButtonStyle.Primary);
 
-
         if (!scheduleFile) {
             const noFileContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
@@ -95,6 +94,11 @@ export default {
             const user = await users.getByDiscordId(interaction.user.id);
 
             if (!user) {
+                const setupClassInfoBtn = new ButtonBuilder()
+                    .setCustomId(`schedule_${interaction.user.id}_start`)
+                    .setLabel("Set up class info")
+                    .setStyle(ButtonStyle.Primary);
+
                 const userNotFoundContainer = new ContainerBuilder()
                     .setAccentColor(Colors.DarkRed)
                     .addTextDisplayComponents(t => t.setContent("### User Not Found"))
@@ -102,7 +106,7 @@ export default {
                     .addTextDisplayComponents(t => t.setContent(`We couldn't find your user data in our database. Please make sure you have submitted your class information first before uploading your schedule.`))
                     .addTextDisplayComponents(t => t.setContent("Please try again after submitting your class information."))
                     .addSeparatorComponents(s => s)
-                    .addActionRowComponents(r => r.addComponents(tryAgainBtn));
+                    .addActionRowComponents(r => r.addComponents(setupClassInfoBtn));
 
                 await interaction.update({
                     components: [userNotFoundContainer],

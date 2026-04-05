@@ -27,18 +27,13 @@ config({ path: resolve(__dirname, "../../.env") });
 
 const envParsed = envSchema.safeParse(process.env);
 
-if (envParsed.error) {
+if (!envParsed.success) {
     const errors = z.treeifyError(envParsed.error);
     const missingVars = Object.entries(errors)
         .map(([key,]) => key);
 
     console.log(`[${tags.Error}] Missing environment variables:\n${missingVars.join("\n")}`);
     throw new Error(`Please check your .env file again and make sure all required variables are set.`);
-}
-
-if (Object.keys(envParsed.data).length == 0) {
-    console.log(`[${tags.Error}] No environment variables found.`);
-    throw new Error(`No environment variables found. Please check your .env file.`);
 }
 
 console.log(`[${tags.System}] Environment Variable Check Success.`);

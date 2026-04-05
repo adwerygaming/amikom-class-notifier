@@ -26,6 +26,8 @@ export default {
             return;
         }
 
+        await interaction.deferReply();
+
         const user = await users.getByDiscordId(interaction.user.id);
         if (!user) {
             await HandleUserHasNotSetupSchedule(interaction);
@@ -44,18 +46,12 @@ export default {
         const coursesContainers = [];
         const headerContainer = new ContainerBuilder()
             .setAccentColor(Colors.Purple)
-            .addTextDisplayComponents(
-                t => t.setContent(`### Today's Schedule`)
-            )
-            .addTextDisplayComponents(
-                t => t.setContent(`You have **${todaySchedules.length} class${todaySchedules.length !== 1 ? "es" : ""}** today.`)
-            )
+            .addTextDisplayComponents(t => t.setContent(`### Today's Schedule`))
+            .addTextDisplayComponents(t => t.setContent(`You have **${todaySchedules.length} class${todaySchedules.length !== 1 ? "es" : ""}** today.`))
             .addSeparatorComponents(s => s)
-            .addTextDisplayComponents(
-                t => t.setContent(`🗓️ **${todayFormatted}**`)
-            );
+            .addTextDisplayComponents(t => t.setContent(`🗓️ **${todayFormatted}**`));
 
-        for(let i = 0; i < todaySchedules.length; i++) {
+        for (let i = 0; i < todaySchedules.length; i++) {
             const course = todaySchedules[i];
 
             const now = moment().tz("Asia/Jakarta");
@@ -138,7 +134,7 @@ export default {
 
             coursesContainers.push(noCoursesContainer);
         }
-        await interaction.reply({
+        await interaction.editReply({
             components: [headerContainer, ...coursesContainers],
             flags: [MessageFlags.IsComponentsV2]
         });
