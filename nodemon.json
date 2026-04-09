@@ -8,6 +8,6 @@
         "node_modules",
         "src/projects/*"
     ],
-    "delay": 2000,
+    "delay": 4000,
     "exec": "npx tsx ./src/index.ts"
 }

@@ -10,8 +10,8 @@ const users = new Users();
 
 export default {
     metadata: new SlashCommandBuilder()
-        .setName("today")
-        .setDescription("Show your classes scheduled for today."),
+        .setName("tomorrow")
+        .setDescription("Show your classes scheduled for tomorrow."),
     execute: async (_client: Client, interaction: ChatInputCommandInteraction) => {
         if (!interaction.guild) {
             await HandleNoInteractionGuild(interaction);
@@ -27,7 +27,7 @@ export default {
         }
 
         const now = moment().tz("Asia/Jakarta");
-        const todayIdx = now.day();
+        const todayIdx = now.add(1, "day").day();
 
         const scheduleBuilder = new ScheduleContainerBuilder(interaction.user, user.id, todayIdx, now);
         const completePack = await scheduleBuilder.build({ withActionButtons: false });

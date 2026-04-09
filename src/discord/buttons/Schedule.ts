@@ -1,12 +1,15 @@
 import { ButtonBuilder, ButtonStyle, Colors, ContainerBuilder, FileUploadBuilder, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import moment from "moment-timezone";
 import { Users } from "../../amikom/Users.js";
 import { ContextManager } from "../../database/ContextManager.js";
 import { ButtonLayout } from "../../types/Discord.types.js";
 import tags from "../../utils/Tags.js";
 import HandleInteractionNoContext from "../functions/InteractionNoContext.js";
+import { ButtonMovementContextData, ScheduleContainerBuilder } from "../functions/ScheduleContainerBuilder.js";
+import HandleUserHasNotSetupSchedule from "../functions/UserHasNotSetupSchedule.js";
 import { ScheduleSetupUserInfoContextData } from "../modals/ScheduleClassInfo.js";
 
-type interactionActions = "start" | "confirm" | "submitFile"
+type interactionActions = "start" | "confirm" | "submitFile" | "show"
 
 const users = new Users();
 
@@ -14,6 +17,44 @@ export default {
     id: "schedule",
     async execute(_client, interaction, data) {
         const action = data[0] as interactionActions;
+
+        if (action == "show") {
+            const ctxId = data[1];
+            const ctx = await ContextManager.get<ButtonMovementContextData>(ctxId);
+
+            if (!ctx) {
+                await HandleInteractionNoContext(interaction);
+
+                try {
+                    await ContextManager.delete(ctxId);
+                } catch (e) {
+                    console.error(`[${tags.Error}] Failed to delete context with id ${ctxId}`);
+                    console.error(e);
+                }
+
+                return;
+            }
+
+            const user = await users.getByDiscordId(interaction.user.id);
+            if (!user) {
+                await HandleUserHasNotSetupSchedule(interaction);
+                return;
+            }
+
+            const now = moment(ctx.now).tz("Asia/Jakarta");
+            const todayIdx = now.day();
+
+            console.log(ctx);
+
+            const scheduleBuilder = new ScheduleContainerBuilder(interaction.user, user.id, todayIdx, now);
+
+            const completePack = await scheduleBuilder.build({ withActionButtons: true });
+
+            await interaction.update({
+                components: [...completePack],
+                flags: [MessageFlags.IsComponentsV2]
+            });
+        }
 
         if (action == "start") {
             const ctxId = data[1];

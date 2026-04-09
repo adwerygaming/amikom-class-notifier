@@ -3,6 +3,11 @@ import z from "zod";
 export const amikomLogoURL = "https://i.postimg.cc/8P5XGmgz/Logo-Gram.png";
 export type ListHari = "SENIN" | "SELASA" | "RABU" | "KAMIS" | "JUMAT"
 
+export enum CourseType {
+    Teori = "Teori",
+    Praktikum = "Praktikum"
+} 
+
 /**
  * Class schedule data structure returned by Amikom API
  */
@@ -73,7 +78,7 @@ export interface ClassSchedule {
      * Type of the course
      * @example "Teori" or "Praktikum"
      */
-    JenisKuliah: "Teori" | "Praktikum"
+    JenisKuliah: CourseType
 
     /** 
      * Class section. Consists of combination of Kode, Shortened MataKuliah and Kode but with 2 digits of entry year (or angkatan).
@@ -125,7 +130,7 @@ export const classSchedulesSchema: z.ZodType<ClassSchedule[]> = z.array(
         Waktu: z.string(),
         Kode: z.string(),
         MataKuliah: z.string(),
-        JenisKuliah: z.enum(["Teori", "Praktikum"]),
+        JenisKuliah: z.enum(CourseType),
         Kelas: z.string(),
         NamaDosen: z.string(),
         EmailDosen: z.string(),

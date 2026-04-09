@@ -1,7 +1,7 @@
-import { ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Colors, ContainerBuilder, MessageFlags } from "discord.js";
+import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Colors, ContainerBuilder, MessageFlags } from "discord.js";
 import tags from "../../utils/Tags.js";
 
-export default async function HandleUserHasNotSetupSchedule(interaction: ChatInputCommandInteraction): Promise<void> {
+export default async function HandleUserHasNotSetupSchedule(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<void> {
     try {
         const submitClassInfoBtn = new ButtonBuilder()
             .setCustomId(`schedule_${interaction.user.id}_start`)

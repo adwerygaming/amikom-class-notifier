@@ -51,7 +51,9 @@ export default {
         }
 
         try {
-            await interaction.deferReply();
+            await interaction.deferReply({
+                flags: [MessageFlags.Ephemeral]
+            });
 
             const user = await users.getByDiscordId(interaction.user.id);
             if (!user) {
