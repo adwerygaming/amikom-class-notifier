@@ -1,221 +1,120 @@
 import { Knex } from "knex";
 import DatabaseClient from "../database/Client.js";
-import { SubscriptionSchema, SubscriptionWithScheduleData } from "../types/Database.types.js";
+import { SubscriptionSchema } from "../types/Database.types.js";
+import tags from "../utils/Tags.js";
 
-type RegisterProp = Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified" | "is_active">
-type UpdateProp = Partial<Omit<SubscriptionSchema, "id" | "guild_id" | "created_at" | "last_modified">>
-
-export class DuplicateSubscriptionError extends Error {
-    constructor(guildId: string, channelId: string) {
-        super(`Channel ${channelId} on ${guildId} is already registered to other schedule.`);
-        this.name = "DuplicateSubscriptionError";
-    }
+interface AddSubscriptionProp {
+    guildId: string
+    channelId: string
 }
 
-export class DuplicateScheduleSubscriptionError extends Error {
-    constructor(guildId: string, scheduleId: string) {
-        super(`Guild ${guildId} already registered this class (${scheduleId}) to other channel. A guild can only subscribe to one channel per schedule.`);
-        this.name = "DuplicateScheduleSubscriptionError";
-    }
+interface RemoveSubscriptionProp {
+    userId: string
+    guildId: string
 }
 
-export class InvalidSubscriptionDataError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = "InvalidSubscriptionDataError";
-    }
-}
-
+/**
+ * Handles operations related to subscriptions.
+ * Users must have an entry in the users table first since the userId references it.
+ */
 export class Subscriptions {
-    constructor(
-        private readonly guildId: string
-    ) { }
-
+    /**
+     * Retrieve the database query builder scoped to the subscriptions table.
+     * @returns A Knex query builder for SubscriptionSchema.
+     */
     private db(): Knex.QueryBuilder<SubscriptionSchema, SubscriptionSchema[]> {
         return DatabaseClient<SubscriptionSchema>("subscriptions");
     }
 
-    static db(): Knex.QueryBuilder<SubscriptionSchema, SubscriptionSchema[]> {
-        return DatabaseClient<SubscriptionSchema>("subscriptions");
-    }
-    
-    static async fetchAllGuilds(): Promise<SubscriptionSchema[]> {
-        const res = await this.db().select("*");
-        return res;
-    }
+    /**
+     * Add a new subscription for a user to receive notifications in a specific guild and channel.
+     * Upsert using `userId` and `guildId` as unique keys.
+     * @param userId The internal user ID. Must exist in the `users` table.
+     * @param options.guildId Discord Guild ID
+     * @param options.channelId Discord Channel ID where notifications will be sent
+     * @returns SubscriptionSchema of the newly added or updated subscription.
+     */
+    async add(userId: string, { guildId, channelId }: AddSubscriptionProp): Promise<SubscriptionSchema> {
+        //! IMPORTANT
+        //! User need to fill out users table first before adding subscription.
+        //! because userId is `users` table id
 
-    static async fetchByScheduleId(scheduleId: string): Promise<SubscriptionWithScheduleData[]> {
-        try {
-            const res = await this.db()
-                .leftJoin("schedule_data", "subscriptions.schedule_id", "schedule_data.id")
-                .where("subscriptions.schedule_id", scheduleId)
-                .select<SubscriptionWithScheduleData[]>(
-                    "subscriptions.*",
-                    DatabaseClient.raw("CASE WHEN schedule_data.id IS NULL THEN NULL ELSE to_jsonb(schedule_data) END as schedule_data"),
-                );
-
-            return res;
-        } catch (e) {
-            throw new Error(`Failed to fetch subscriptions for schedule ID ${scheduleId}.`, { cause: e });
-        }
-    }
-
-    async fetch(withScheduleData: true): Promise<SubscriptionWithScheduleData[]>
-    async fetch(withScheduleData?: false): Promise<SubscriptionSchema[]>
-    async fetch(withScheduleData?: boolean): Promise<SubscriptionSchema[] | SubscriptionWithScheduleData[]> {
-        try {
-            if (withScheduleData) {
-                const res = await this.db()
-                    .leftJoin("schedule_data", "subscriptions.schedule_id", "schedule_data.id")
-                    .where("guild_id", this.guildId)
-                    .select<SubscriptionWithScheduleData[]>(
-                        "subscriptions.*",
-                        DatabaseClient.raw("CASE WHEN schedule_data.id IS NULL THEN NULL ELSE to_jsonb(schedule_data) END as schedule_data"),
-                    );
-
-                return res;
-            }
-
-            const res = await this.db()
-                .where("guild_id", this.guildId)
-                .select<SubscriptionSchema[]>("*");
-
-            return res;
-        } catch (e) {
-            throw new Error(`Failed to fetch subscriptions for guild ${this.guildId}.`, { cause: e });
-        }
-    }
-
-    async fetchByChannel(channelId: string, withScheduleData: true): Promise<SubscriptionWithScheduleData | null>
-    async fetchByChannel(channelId: string, withScheduleData?: false): Promise<SubscriptionSchema | null>
-    async fetchByChannel(channelId: string, withScheduleData?: boolean): Promise<SubscriptionSchema | SubscriptionWithScheduleData | null> {
-        try {
-            if (withScheduleData) {
-                const res = await this.db()
-                    .leftJoin("schedule_data", "subscriptions.schedule_id", "schedule_data.id")
-                    .where("guild_id", this.guildId)
-                    .andWhere("channel_id", channelId)
-                    .select<SubscriptionWithScheduleData>(
-                        "subscriptions.*",
-                        DatabaseClient.raw("CASE WHEN schedule_data.id IS NULL THEN NULL ELSE to_jsonb(schedule_data) END as schedule_data"),
-                    )
-                    .first();
-
-                return res ?? null;
-            }
-
-            const res = await this.db()
-                .where("guild_id", this.guildId)
-                .andWhere("channel_id", channelId)
-                .select<SubscriptionSchema>("*")
-                .first();
-
-            return res ?? null;
-        } catch (e) {
-            throw new Error(`Failed to fetch subscriptions for guild ${this.guildId} and channel ${channelId}.`, { cause: e });
-        }
-    }
-
-    async update(id: string, { user_id, schedule_id, mentions, is_active, channel_id }: UpdateProp): Promise<SubscriptionSchema | null> {
-        mentions = JSON.stringify(mentions) as unknown as string[];
-
-        try {
-            const [res] = await this.db()
-                .where("id", id)
-                .andWhere("guild_id", this.guildId)
-                .update({
-                    user_id,
-                    schedule_id,
-                    mentions,
-                    is_active,
-                    channel_id
-                })
-                .returning("*");
-
-            return res ?? null;
-        } catch (e) {
-            throw new Error(`Failed to update subscriptions for guild ${this.guildId}.`, { cause: e });
-        }
-    }
-
-    async register({ user_id, channel_id, schedule_id, mentions }: RegisterProp): Promise<SubscriptionSchema> {
-        mentions = JSON.stringify(mentions ?? []) as unknown as string[];
         try {
             const [res] = await this.db()
                 .insert({
-                    guild_id: this.guildId,
-                    schedule_id,
-                    channel_id,
-                    user_id,
-                    mentions
+                    userId: userId, // users table id
+                    channelId,
+                    guildId
                 })
+                .onConflict(["userId", "guildId"])
+                .merge({ channelId })
                 .returning("*");
 
             return res;
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-            if (e.code === "23505") { // unique violation
-                if (e.constraint === "subscriptions_guild_channel_unique") {
-                    throw new DuplicateSubscriptionError(this.guildId, channel_id);
-                }
-
-                if (e.constraint === "subscriptions_guild_schedule_unique") {
-                    throw new DuplicateScheduleSubscriptionError(this.guildId, schedule_id);
-                }
-            } else if (e.code === "22P02") { // invalid text representation, likely due to mentions array not being in correct format
-                throw new InvalidSubscriptionDataError("Invalid data format for subscription. Please check your input.");
-            }
-
-            // generic error fallback
-            throw new Error(`Failed to register subscription for guild ${this.guildId}.`, { cause: e });
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to add subscription [GID: ${guildId} | CID: ${channelId} | UID: ${userId}]`);
+            console.error(e);
+            throw new Error("Failed to add subscription.", { cause: e });
         }
     }
 
-    async unregister(id: string): Promise<SubscriptionSchema> {
-        let res;
+    /**
+     * Retrieves all subscriptions associated with a specific guild ID.
+     * @param guildId The Discord Guild ID.
+     * @returns An array of subscription records.
+     */
+    async getByGuildId(guildId: string): Promise<SubscriptionSchema[]> {
         try {
-            res = await this.db()
-                .where("id", id)
-                .andWhere("guild_id", this.guildId)
-                .del()
-                .returning("*");
+            const res = await this.db()
+                .where("guildId", guildId)
+                .select("*");
 
+            return res;
         } catch (e) {
-            throw new Error(`Failed to unregister subscription for guild ${this.guildId} with ID ${id}.`, { cause: e });
-        }
-
-        if (!res || res.length == 0) {
-            throw new Error(`Subscription with ID ${id} couldn't be found for guild ${this.guildId}.`);
-        }
-
-        return res[0];
-
-    }
-
-    async enable(): Promise<SubscriptionSchema | null> {
-        try {
-            const [res] = await this.db()
-                .where("guild_id", this.guildId)
-                .update({ is_active: true })
-                .returning("*");
-
-            return res ?? null;
-        } catch (e) {
-            throw new Error(`Failed to enable subscription for guild ${this.guildId}.`, { cause: e });
+            console.error(`[${tags.Error}] Failed to get subscriptions by guild id [GID: ${guildId}]`);
+            console.error(e);
+            throw new Error("Failed to get subscriptions by guild id.", { cause: e });
         }
     }
 
-    async disable(): Promise<SubscriptionSchema | null> {
+    /**
+     * Retrieves all subscriptions across all guilds for a specific user ID.
+     * @param userId The internal user ID to look up.
+     * @returns An array of subscription records.
+     */
+    async getByUserId(userId: string): Promise<SubscriptionSchema[]> {
         try {
-            const [res] = await this.db()
-                .where("guild_id", this.guildId)
-                .update({ is_active: false })
+            const res = await this.db()
+                .where("userId", userId)
+                .select("*");
+
+            return res;
+        } catch (e) {
+            console.error(`[${tags.Error}] Failed to get subscriptions by user id [UID: ${userId}]`);
+            console.error(e);
+            throw new Error("Failed to get subscriptions by user id.", { cause: e });
+        }
+    }
+
+    /**
+     * Remove a subscription for a user in a specific guild. This will stop the user from receiving notifications in that guild.
+     * @param options.guildId Discord Guild ID
+     * @param options.userId User ID
+     * @returns SubscriptionSchema | null
+     */
+    async remove({ guildId, userId }: RemoveSubscriptionProp): Promise<SubscriptionSchema | null> {
+        try {
+            const res = await this.db()
+                .where("guildId", guildId)
+                .andWhere("userId", userId)
+                .delete()
                 .returning("*");
 
-            return res ?? null;
+            return res.length > 0 ? res[0] : null;
         } catch (e) {
-            throw new Error(`Failed to disable subscription for guild ${this.guildId}.`, { cause: e });
+            console.error(`[${tags.Error}] Failed to remove subscription [GID: ${guildId} | UID: ${userId}]`);
+            console.error(e);
+            throw new Error("Failed to remove subscription.", { cause: e });
         }
     }
 }

@@ -4,7 +4,7 @@ import tags from "../../utils/Tags.js";
 
 const helper = new Helper();
 
-export default async function HandleUserNoPermissions(interaction: ChatInputCommandInteraction, permissions: PermissionResolvable[]): Promise<void> {
+export default async function HandleBotNoPermissions(interaction: ChatInputCommandInteraction, permissions: PermissionResolvable[]): Promise<void> {
     try {
         const readable = helper.toReadableNames(permissions);
         const permissionList = readable.join(", ");
@@ -13,11 +13,11 @@ export default async function HandleUserNoPermissions(interaction: ChatInputComm
         const unauthorizedContainer = new ContainerBuilder()
             .setAccentColor(Colors.DarkRed)
             .addTextDisplayComponents(
-                text => text.setContent("### Unauthorized")
+                text => text.setContent("### Missing Access")
             )
             .addSeparatorComponents(sep => sep)
             .addTextDisplayComponents(
-                text => text.setContent(`You don't have permission to use this command. You need ${permissionList} permission${plural} to use this command.`)
+                text => text.setContent(`I don't have permission to use this command. I need ${permissionList} permission${plural} to use this command.`)
             );
 
         if (interaction.replied || interaction.deferred) {
@@ -28,11 +28,11 @@ export default async function HandleUserNoPermissions(interaction: ChatInputComm
         } else {
             await interaction.reply({
                 components: [unauthorizedContainer],
-                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
             });
         }
     } catch (e) {
-        console.error(`[${tags.Error}] Failed to handle User has no required permissions situation.`);
+        console.error(`[${tags.Error}] Failed to handle Bot has no required permissions situation.`);
         console.error(e);
     }
 }

@@ -5,7 +5,7 @@ const BotToken = env.DISCORD_TOKEN;
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-void client.login(BotToken).catch((err) => {
+void client.login(BotToken).catch((err: unknown) => {
     console.error("Failed to login to Discord:", err);
     process.exit(1);
 });

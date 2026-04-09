@@ -48,28 +48,21 @@ export class CommandHandler {
                 for (const subFile of subFiles) {
                     const subFilePath = path.join(fullPath, subFile);
                     const { default: command } = await import(pathToFileURL(subFilePath).href) as { default: SlashCommandLayout };
-                    
-                    if (command?.metadata) {
-                        const commandName = command.metadata.name;
-                        group.set(commandName, command);
-                        groupData.options.push(command.metadata.toJSON());
-                        this.commands.set(`${file}/${commandName}`, command);
-                        console.log(`[${tags.CommandImporter}] Imported ./${file}/${commandName}`);
-                    } else {
-                        console.log(`[${tags.CommandImporter}] ./${file}/${subFile} dosen't have metadata.`);
-                    }
+
+                    const commandName = command.metadata.name;
+                    group.set(commandName, command);
+                    groupData.options.push(command.metadata.toJSON());
+                    this.commands.set(`${file}/${commandName}`, command);
+                    console.log(`[${tags.CommandImporter}] Imported ./${file}/${commandName}`);
                 }
 
                 this.commandData.push(groupData);
             } else if (file.endsWith('.js') || file.endsWith('.ts')) {
                 const { default: command } = await import(pathToFileURL(fullPath).href) as { default: SlashCommandLayout };
-                if (command.metadata) {
-                    this.commands.set(command.metadata.name, command);
-                    this.commandData.push(command.metadata.toJSON());
-                    console.log(`[${tags.CommandImporter}] Imported ./${command.metadata.name}`);
-                } else {
-                    console.log(`[${tags.CommandImporter}] ./${file} dosen't have metadata.`);
-                }
+                
+                this.commands.set(command.metadata.name, command);
+                this.commandData.push(command.metadata.toJSON());
+                console.log(`[${tags.CommandImporter}] Imported ./${command.metadata.name}`);
             }
         }
     }
@@ -87,11 +80,8 @@ export class CommandHandler {
                 await this.loadDropdowns(fullPath);
             } else if (file.endsWith('.js') || (file.endsWith('.ts') && !file.endsWith('.d.ts'))) {
                 try {
-                    const { default: dropdown }: { default: DropdownLayout } = await import(pathToFileURL(fullPath).href);
-                    if (!dropdown.id || !dropdown.execute) {
-                        console.warn(`[${tags.CommandImporter}] Dropdown at ${fullPath} missing id or execute`);
-                        continue;
-                    }
+                    const { default: dropdown } = (await import(pathToFileURL(fullPath).href)) as { default: DropdownLayout };
+                    
                     this.dropdowns.set(dropdown.id, dropdown);
                     console.log(`[${tags.CommandImporter}] Loaded dropdown: ${dropdown.id}`);
                 } catch (err) {
@@ -113,11 +103,8 @@ export class CommandHandler {
                 await this.loadButtons(fullPath);
             } else if (file.endsWith('.js') || (file.endsWith('.ts') && !file.endsWith('.d.ts'))) {
                 try {
-                    const { default: button }: { default: ButtonLayout } = await import(pathToFileURL(fullPath).href);
-                    if (!button.id || !button.execute) {
-                        console.warn(`[${tags.CommandImporter}] Button at ${fullPath} missing id or execute`);
-                        continue;
-                    }
+                    const { default: button } = (await import(pathToFileURL(fullPath).href)) as { default: ButtonLayout };
+
                     this.buttons.set(button.id, button);
                     console.log(`[${tags.CommandImporter}] Loaded button: ${button.id}`);
                 } catch (err) {
@@ -140,11 +127,8 @@ export class CommandHandler {
                 await this.loadModals(fullPath);
             } else if (file.endsWith('.js') || (file.endsWith('.ts') && !file.endsWith('.d.ts'))) {
                 try {
-                    const { default: modal }: { default: ModalLayout } = await import(pathToFileURL(fullPath).href);
-                    if (!modal.id || !modal.execute) {
-                        console.warn(`[${tags.CommandImporter}] Modal at ${fullPath} missing id or execute`);
-                        continue;
-                    }
+                    const { default: modal } = (await import(pathToFileURL(fullPath).href)) as { default: ModalLayout };
+
                     this.modals.set(modal.id, modal);
                     console.log(`[${tags.CommandImporter}] Loaded modal: ${modal.id}`);
                 } catch (err) {
@@ -220,9 +204,7 @@ export class CommandHandler {
         }
 
         try {
-            if (command.execute) {
-                await command.execute(client, interaction);
-            }
+            await command.execute(client, interaction);
         } catch (error) {
             console.error(error);
             const commandErrorContainer = new ContainerBuilder()
@@ -284,7 +266,7 @@ export class CommandHandler {
             return;
         }
 
-        const dropdown = this.dropdowns.get(customId ?? '');
+        const dropdown = this.dropdowns.get(customId);
         if (!dropdown) {
             const noDropdownContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
@@ -322,7 +304,7 @@ export class CommandHandler {
                     });
                 }
             } catch (e) {
-                console.log(`[${tags.Discord}] Error sending error catch message: ${e}`);
+                console.log(`[${tags.Discord}] Error sending error catch message: ${String(e)}`);
             }
         }
     }
@@ -348,7 +330,7 @@ export class CommandHandler {
             return;
         }
 
-        const button = this.buttons.get(customId ?? '');
+        const button = this.buttons.get(customId);
 
         if (!button) {
             const noButtonContainer = new ContainerBuilder()
@@ -387,7 +369,7 @@ export class CommandHandler {
                     });
                 }
             } catch (e) {
-                console.log(`[${tags.Discord}] Error sending error catch message: ${e}`);
+                console.log(`[${tags.Discord}] Error sending error catch message: ${String(e)}`);
             }
         }
     }
@@ -417,7 +399,7 @@ export class CommandHandler {
             return;
         }
 
-        const modal = this.modals.get(customId ?? '');
+        const modal = this.modals.get(customId);
         if (!modal) {
             const noModalContainer = new ContainerBuilder()
                 .setAccentColor(Colors.DarkRed)
@@ -455,7 +437,7 @@ export class CommandHandler {
                     });
                 }
             } catch (e) {
-                console.log(`[${tags.Discord}] Error sending error catch message: ${e}`);
+                console.log(`[${tags.Discord}] Error sending error catch message: ${String(e)}`);
             }
         }
     }

@@ -1,64 +1,69 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-CREATE TABLE IF NOT EXISTS schedule_data (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),  
-    last_modified TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "lastModified" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT UNIQUE NOT NULL, -- The Discord ID
     major TEXT NOT NULL,
-    entry_year INTEGER NOT NULL,
-    class_number INTEGER NOT NULL,
-    schedule JSONB NOT NULL,
-
-    CONSTRAINT schedule_data_unique_class UNIQUE (major, entry_year, class_number)
+    entry_year SMALLINT NOT NULL,
+    class_number SMALLINT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS user_class_assignments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_modified TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    user_id     TEXT NOT NULL,
-    guild_id    TEXT NOT NULL,
-    schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS schedules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "lastModified" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
-    CONSTRAINT user_class_unique UNIQUE (user_id, guild_id)
+    "isActive" BOOLEAN DEFAULT TRUE,
+    "IdHari" INT NOT NULL,
+    "IdJam" INT NOT NULL,
+    "IdKuliah" INT NOT NULL,
+    "Keterangan" TEXT NOT NULL,
+    "Hari" TEXT NOT NULL,
+    "Ruang" TEXT NOT NULL,
+    "Waktu" TEXT NOT NULL,
+    "Kode" TEXT NOT NULL,
+    "MataKuliah" TEXT NOT NULL,
+    "JenisKuliah" TEXT NOT NULL,
+    "Kelas" TEXT NOT NULL,
+    "NamaDosen" TEXT NOT NULL,
+    "EmailDosen" TEXT NOT NULL,
+    "IsBolehPresensi" INT NOT NULL,
+    "IsZoomURL" INT NOT NULL,
+    "ZoomURL" TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS subscriptions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_modified TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    guild_id TEXT NOT NULL,
-    channel_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    mentions JSONB DEFAULT '[]'::jsonb,
-    schedule_id UUID NOT NULL REFERENCES schedule_data(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "lastModified" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "guildId" TEXT NOT NULL,
+    "channelId" TEXT NOT NULL,
+    "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mentions BOOLEAN DEFAULT FALSE,
 
-    CONSTRAINT subscriptions_guild_channel_unique UNIQUE (guild_id, channel_id),
-    CONSTRAINT subscriptions_guild_schedule_unique UNIQUE (guild_id, schedule_id)
+    CONSTRAINT subscriptions_user_guild_unique UNIQUE ("userId", "guildId")
 );
 
 CREATE OR REPLACE FUNCTION update_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.last_modified = NOW();
+    NEW."lastModified" = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+CREATE TRIGGER update_users_modtime
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_modified_column();
+
+CREATE TRIGGER update_schedules_modtime
+    BEFORE UPDATE ON schedules
+    FOR EACH ROW
+    EXECUTE FUNCTION update_modified_column();
 
 CREATE TRIGGER update_subscriptions_modtime
     BEFORE UPDATE ON subscriptions
     FOR EACH ROW
     EXECUTE FUNCTION update_modified_column();
-
-CREATE TRIGGER update_schedule_data_modtime
-    BEFORE UPDATE ON schedule_data
-    FOR EACH ROW
-    EXECUTE FUNCTION update_modified_column();
-
-CREATE TRIGGER update_user_class_assignments_modtime
-    BEFORE UPDATE ON user_class_assignments
-    FOR EACH ROW
-    EXECUTE FUNCTION update_modified_column();
-
-CREATE INDEX idx_guild_id ON subscriptions(guild_id);

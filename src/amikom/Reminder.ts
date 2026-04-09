@@ -1,196 +1,89 @@
 import moment from "moment-timezone";
-// @ts-expect-error moment locale lacks type declarations but is needed for Indonesian day names
-import "moment/locale/id.js";
 import redisClient from "../database/RedisClient.js";
-import { ReminderEvent } from "../types/ACN.types.js";
-import { ClassSchedule } from "../types/Amikom.types.js";
-import { ScheduleDataSchema } from "../types/Database.types.js";
 import tags from "../utils/Tags.js";
-import { Helper } from "./Helper.js";
-import { ScheduleData } from "./ScheduleData.js";
+import { GetAllSchedulesResult, Schedules } from "./Schedules.js";
 
-const schedule = new ScheduleData();
-const helper = new Helper();
+const schedules = new Schedules();
 
-interface ReminderConfig {
-    intervalSeconds: number
-    debugTime?: moment.Moment
+interface StartProp {
+    checkIntervals: number[]
 }
 
-interface CheckConfig {
-    debugTime?: moment.Moment
+export const reminderChannelName = "schedule_reminder";
+const redis = redisClient.duplicate();
+
+export type ReminderPayload = {
+    data: GetAllSchedulesResult,
+    metadata: ReminderMetadata
 }
 
-interface UpdateConfig extends CheckConfig {
-    schedule: ScheduleDataSchema
-}
-
-interface StateConfig {
-    event: ReminderEvent
-    classCode: ClassSchedule["Kelas"]
-    classPeriod: ClassSchedule["IdJam"]
-}
-
-export interface CheckReminderResponse {
-    schedule: CheckReminderSchedule
-    nextSchedule: ClassSchedule | null
-}
-
-export interface CheckReminderSchedule {
-    id: ScheduleDataSchema["id"]
-    schedule: ClassSchedule
+type ReminderMetadata = {
+    minutesBefore: number;
+    isHappeningNow: boolean;
 }
 
 export class Reminder {
-    private readonly state = redisClient.duplicate();
-    private readonly pub = redisClient.duplicate();
+    async start({ checkIntervals }: StartProp): Promise<void> {
+        console.log(`[${tags.Reminder}] Reminder service started.`);
+        console.log(`[${tags.Reminder}] Checking intervals: ${checkIntervals.join(", ")} minutes.`);
 
-    private async getState({ event, classCode, classPeriod }: StateConfig): Promise<boolean> {
-        const todayDateKey = helper.getTodayDateKey();
-        const key = `reminder:${todayDateKey}:${classCode}:${classPeriod}:${event}`;
+        setInterval(() => {
+            void (async (): Promise<void> => {
+                await this.check(checkIntervals);
+            })();
+        }, 30000);
 
-        const value = await this.state.get(key);
-        return !!value;
+        await this.check(checkIntervals);
     }
 
-    private async setState({ event, classCode, classPeriod }: StateConfig, value: boolean): Promise<void> {
-        const todayDateKey = helper.getTodayDateKey();
-        const key = `reminder:${todayDateKey}:${classCode}:${classPeriod}:${event}`;
-
-        console.log(`[${tags.Debug}] Setting state for key ${key} to ${value}`);
-
-        // 24h expiration to prevent stale data and duplicate notifications.
-        await this.state.setex(key, 60 * 60 * 24, value.toString());
-    }
-
-    async start({ intervalSeconds, debugTime }: ReminderConfig): Promise<void> {
-        const INTERVAL = intervalSeconds || 5;
-
-        console.log(`[${tags.Reminder}] Reminder service started. Checking schedule every ${INTERVAL} seconds.`);
-        setInterval(async () => {
-            try {
-                await this.check({ debugTime });
-            } catch (e) {
-                console.error(`[${tags.Error}] Error occurred during schedule check:`, e);
-            }
-        }, INTERVAL * 1000);
-    }
-
-    private async check({ debugTime }: CheckConfig): Promise<void> {
-        const allSchedules = await schedule.getAll();
-
-        for (const scheduleData of allSchedules) {
-            console.log(`[${tags.Debug}] Checking ${scheduleData.entry_year} ${scheduleData.major} ${scheduleData.class_number} schedule.`);
-            await this.update({ debugTime, schedule: scheduleData });
-        }
-    }
-
-    private async update({ debugTime, schedule: rawSchedule }: UpdateConfig): Promise<void> {
+    /**
+     * Iterate the assigned check intervals and publish events if a class is confirmed 
+     * on the specific offset matching the `triggerMinutes`.
+     * @param triggerMinutes The offsets in minutes to look ahead (e.g. 5, 10, 15).
+     */
+    async check(triggerMinutes: number[]): Promise<void> {
         try {
-            const now = debugTime || moment().tz("Asia/Jakarta");
-            const today = now.locale("id").format("dddd").toUpperCase();
-            console.log(`[${tags.Debug}] Right now is ${now.format("HH:mm:ss - dddd, DD MMM YYYY")}`);
+            const now = moment().tz("Asia/Jakarta"); //.hour(6).minute(45).second(0);
+            console.log(`[${tags.Job}] Now is ${now.format("HH:mm:ss")}`);
 
-            const schedule = rawSchedule.schedule;
-            const todaySchedule = schedule.filter(s => s.Hari.toUpperCase() === today);
+            const targetSlots = triggerMinutes.map(minutes => ({
+                minutes,
+                targetTimeHHmm: now.clone().add(minutes, 'minutes').format("HH:mm")
+            }));
+            const formattedTargetTimes = targetSlots.map(slot => slot.targetTimeHHmm);
 
-            // silent on weekends, no classes anyway
-            const isWeekend = today == "SABTU" || today == "MINGGU";
-            if (isWeekend) {
+            const pendingSchedules = await schedules.getPendingReminders(formattedTargetTimes);
+            if (pendingSchedules.length === 0) {
                 return;
             }
 
-            if (todaySchedule?.length == 0) {
-                // console.log(`[${tags.Reminder}] Today is ${today}, but there are no classes scheduled.`)
-                return;
-            }
+            const minutesByTargetTime = new Map(targetSlots.map(slot => [slot.targetTimeHHmm, slot.minutes]));
 
-            // const currentSchedule = todaySchedule.find((schedule) => {
-            //     const { start, end } = helper.resolveClassTime(schedule.Waktu)
-            //     return now.isBetween(start, end)
-            // }) ?? null
+            for (const sch of pendingSchedules) {
+                const targetTimeHHmm = sch.Waktu.slice(0, 5);
+                const minutes = minutesByTargetTime.get(targetTimeHHmm);
 
-            const nextSchedule = todaySchedule.find((schedule) => {
-                const { start } = helper.resolveClassTime(now, schedule.Waktu);
-                return start.isAfter(now);
-            }) ?? null;
+                if (typeof minutes === "undefined") {
+                    continue;
+                }
 
-            // debug
-            // if (nextSchedule) {
-            //     const { start } = helper.resolveClassTime(now, nextSchedule.Waktu)
-            //     const diff = start.diff(now, "minutes")
-            //     console.log(`[${tags.Debug}] Next class in ${diff} minutes`)
-            //     console.log(`[${tags.Debug}] ${nextSchedule.MataKuliah} at ${start.format("HH:mm")}`)
-            // }
+                console.log(`[${tags.Job}] [${minutes}] Checking for classes starting at ${targetTimeHHmm}...`);
 
-            for (const schedule of todaySchedule) {
-                // there is also endTime, you can implement endInX events if u want.
-                const { start: startTime } = helper.resolveClassTime(now, schedule.Waktu);
-                const diff = startTime.diff(now, "minutes");
+                const isHappeningNow = minutes === 0;
 
-                const classCode = schedule.Kelas;
-                const classPeriod = schedule.IdJam;
-                
-                const stateConfig: StateConfig = {
-                    classCode,
-                    classPeriod,
-                    event: ReminderEvent.StartingNow
+                const payload: ReminderPayload = {
+                    data: sch,
+                    metadata: {
+                        minutesBefore: minutes,
+                        isHappeningNow
+                    }
                 };
 
-                const response: CheckReminderResponse = {
-                    schedule: {
-                        id: rawSchedule.id,
-                        schedule
-                    },
-                    nextSchedule
-                };
-
-                // what? DRY? who cares?
-
-                const hasNotifyStartingNow = await this.getState(stateConfig);
-                if (diff >= -5 && diff <= 0 && !hasNotifyStartingNow) {
-                    console.log(`[${tags.Reminder}] Sending starting now reminder event.`);
-                    await this.pub.publish(ReminderEvent.StartingNow, JSON.stringify(response));
-                    await this.setState(stateConfig, true);
-                }
-
-                const hasNotifyIn5Minutes = await this.getState({...stateConfig, event: ReminderEvent.In5Minutes});
-                if (diff >= 1 && diff <= 5 && !hasNotifyIn5Minutes) {
-                    console.log(`[${tags.Reminder}] Sending in 5 minutes reminder event.`);
-                    await this.pub.publish(ReminderEvent.In5Minutes, JSON.stringify(response));
-                    await this.setState({...stateConfig, event: ReminderEvent.In5Minutes}, true);
-                }
-
-                const hasNotifyIn10Minutes = await this.getState({...stateConfig, event: ReminderEvent.In10Minutes});
-                if (diff >= 6 && diff <= 10 && !hasNotifyIn10Minutes) {
-                    console.log(`[${tags.Reminder}] Sending in 10 minutes reminder event.`);
-                    await this.pub.publish(ReminderEvent.In10Minutes, JSON.stringify(response));
-                    await this.setState({...stateConfig, event: ReminderEvent.In10Minutes}, true);
-                }
-
-                const hasNotifyIn15Minutes = await this.getState({...stateConfig, event: ReminderEvent.In15Minutes});
-                if (diff >= 11 && diff <= 15 && !hasNotifyIn15Minutes) {
-                    console.log(`[${tags.Reminder}] Sending in 15 minutes reminder event.`);
-                    await this.pub.publish(ReminderEvent.In15Minutes, JSON.stringify(response));
-                    await this.setState({...stateConfig, event: ReminderEvent.In15Minutes}, true);
-                }
-
-                const hasNotifyIn30Minutes = await this.getState({...stateConfig, event: ReminderEvent.In30Minutes});
-                if (diff >= 16 && diff <= 30 && !hasNotifyIn30Minutes) {
-                    console.log(`[${tags.Reminder}] Sending in 30 minutes reminder event.`);
-                    await this.pub.publish(ReminderEvent.In30Minutes, JSON.stringify(response));
-                    await this.setState({...stateConfig, event: ReminderEvent.In30Minutes}, true);
-                }
-
-                const hasNotifyIn1Hour = await this.getState({...stateConfig, event: ReminderEvent.In1Hour});
-                if (diff >= 31 && diff <= 60 && !hasNotifyIn1Hour) {
-                    console.log(`[${tags.Reminder}] Sending in 1 hour reminder event.`);
-                    await this.pub.publish(ReminderEvent.In1Hour, JSON.stringify(response));
-                    await this.setState({...stateConfig, event: ReminderEvent.In1Hour}, true);
-                }
+                await redis.publish(reminderChannelName, JSON.stringify(payload));
             }
-        } catch (e) {
-            console.error("Error occurred while checking schedule:", e);
+        } catch (error) {
+            console.error(`[${tags.Error}] Error occured when checking reminders:`);
+            console.error(error);
         }
     }
 }

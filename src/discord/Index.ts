@@ -4,43 +4,49 @@ import client from './Client.js';
 
 console.log(`[${tags.System}] Loaded Discord Index Script.`);
 
-// import moment from 'moment-timezone';
-import { Reminder } from '../amikom/Reminder.js';
+import { Reminder } from "../amikom/Reminder.js";
 import { CommandHandler } from './CommandHandler.js';
 import { Listener } from './Listener.js';
 
+const reminder = new Reminder();
+const listener = new Listener();
+
 const commandHandler = new CommandHandler();
 
-const listener = new Listener();
-const reminder = new Reminder();
+client.on(Events.ClientReady, (bot: Client) => {
+  void (async (): Promise<void> => {
+    await commandHandler.loadCommands();
+    await commandHandler.loadDropdowns();
+    await commandHandler.loadButtons();
+    await commandHandler.loadModals();
+    await commandHandler.registerCommands();
 
-client.on(Events.ClientReady, async (bot: Client) => {
-  // loads commands
-  await commandHandler.loadCommands();
-  await commandHandler.loadDropdowns();
-  await commandHandler.loadButtons();
+    console.log('');
+    console.log(`[${tags.Discord}] Connected to Discord API.`);
+    console.log(`[${tags.Discord}] Bot Information:`);
+    console.log(`[${tags.Discord}] ID           : ${bot.user?.id ?? '-'}`);
+    console.log(`[${tags.Discord}] Username     : ${bot.user?.username ?? '-'}`);
+    console.log(`[${tags.Discord}] Display Name : ${bot.user?.displayName ?? '-'}`);
+    console.log(`[${tags.Discord}] Tags         : ${bot.user?.discriminator ?? '-'}`);
+    console.log(`[${tags.Discord}] Servers      : ${bot.guilds.cache.size} Server${bot.guilds.cache.size !== 1 ? 's' : ''}`);
+    console.log('');
 
-  // register commands to discord
-  await commandHandler.registerCommands();
+    await listener.start();
 
-  console.log('');
-  console.log(`[${tags.Discord}] Connected to Discord API.`);
-  console.log(`[${tags.Discord}] Bot Information:`);
-  console.log(`[${tags.Discord}] ID           : ${bot?.user?.id ?? '-'}`);
-  console.log(`[${tags.Discord}] Username     : ${bot?.user?.username ?? '-'}`);
-  console.log(`[${tags.Discord}] Display Name : ${bot?.user?.displayName ?? '-'}`);
-  console.log(`[${tags.Discord}] Tags         : ${bot?.user?.discriminator ?? '-'}`);
-  console.log(`[${tags.Discord}] Servers      : ${bot?.guilds.cache.size ?? '-'} Server${bot?.guilds?.cache?.size !== 1 ? 's' : ''}`);
-  console.log('');
-
-  await reminder.start({
-    intervalSeconds: 2,
-    // debugTime: moment("10:40", "HH:mm").day(1).tz("Asia/Jakarta")
+    await reminder.start({
+      checkIntervals: [0, 5, 10, 15]
+    });
+  })().catch((e: unknown) => {
+    console.error(`[${tags.Error}] An error occurred during bot ready event.`);
+    console.error(e);
   });
-
-  await listener.start();
 });
 
-client.on(Events.InteractionCreate, async interaction => {
-  await commandHandler.handleInteraction(interaction);
+client.on(Events.InteractionCreate, interaction => {
+  void (async (): Promise<void> => {
+    await commandHandler.handleInteraction(interaction);
+  })().catch((e: unknown) => {
+    console.error(`[${tags.Error}] An error occurred while handling interaction.`);
+    console.error(e);
+  });
 });

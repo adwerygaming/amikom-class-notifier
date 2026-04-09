@@ -1,168 +1,161 @@
-import { Colors, EmbedBuilder, MessageCreateOptions } from "discord.js";
+import { Colors, EmbedBuilder } from "discord.js";
 import moment from "moment-timezone";
 import { Helper } from "../amikom/Helper.js";
-import { CheckReminderResponse } from "../amikom/Reminder.js";
-import { Subscriptions } from "../amikom/Subscriptions.js";
+import { reminderChannelName, ReminderPayload } from "../amikom/Reminder.js";
+import { Schedules, StateProp } from "../amikom/Schedules.js";
 import redisClient from "../database/RedisClient.js";
-import { ReminderEvent } from "../types/ACN.types.js";
 import { amikomLogoURL } from "../types/Amikom.types.js";
 import tags from "../utils/Tags.js";
 import client from "./Client.js";
 
-const sub = redisClient.duplicate();
 const helper = new Helper();
+const schedules = new Schedules();
 
 export class Listener {
+    /**
+     * Start the background Listener loop to await incoming notification signals.
+     * This will connect to the internal task pub/sub bus to observe incoming classes.
+     */
     async start(): Promise<void> {
-        const subscribedEvents = [
-            ReminderEvent.StartingNow,
-            ReminderEvent.In5Minutes,
-            ReminderEvent.In10Minutes,
-            ReminderEvent.In15Minutes,
-            ReminderEvent.In30Minutes,
-            ReminderEvent.In1Hour,
-        ];
-
-        console.log(`[${tags.DiscordListener}] Subscribed to ${subscribedEvents.length} reminder events: ${subscribedEvents.join(", ")}`);
-
-        await sub.subscribe(
-            ...subscribedEvents
-        );
-
-        // channel = ReminderEvent
-        // message = CheckReminderResponse
-        sub.on("message", async (channel: ReminderEvent, message: string) => {
-            console.log(`[${tags.DiscordListener}] Received reminder event ${channel}`);
-            // parsing the content
-            let data: CheckReminderResponse;
-
-            try {
-                data = JSON.parse(message) as CheckReminderResponse;
-            } catch (e) {
-                console.error(`[${channel}] Failed to parse message:`, e);
-                return;
-            }
-
-            const schedule = data.schedule.schedule;
-            const scheduleId = data.schedule.id;
-            // const nextSchedule = data.nextSchedule
-
-            try {
-                const now = moment().tz("Asia/Jakarta");
-                const { start, end } = helper.resolveClassTime(now, schedule.Waktu);
-                const duration = helper.formatDuration(end.diff(start, "minutes"));
-
-                if (channel === ReminderEvent.StartingNow) {
-                    const startingNowEmbed = new EmbedBuilder()
-                        .setColor(Colors.Orange)
-                        .setTitle(`Class Starting Now`)
-                        .setDescription(`**${schedule.MataKuliah}** (_${schedule.Kode}_) is starting now.`)
-                        .setThumbnail(amikomLogoURL)
-                        .addFields(
-                            {
-                                name: "Lecturer",
-                                value: schedule.NamaDosen || "N/A",
-                                inline: true,
-                            },
-                            {
-                                name: "Time / Duration",
-                                value: `${start.format("HH:mm")} - ${end.format("HH:mm")} (${duration})`,
-                                inline: true,
-                            },
-                            {
-                                name: "Room",
-                                value: schedule.Ruang || "N/A",
-                                inline: true,
-                            }
-                        );
-
-                    await this.sendMessage(scheduleId, { embeds: [startingNowEmbed] });
-                } else {
-                    const diffFromNow = start.diff(now, "minutes");
-
-                    const comingEmbed = new EmbedBuilder()
-                        .setColor(Colors.Orange)
-                        .setTitle(`Class in ${diffFromNow} minutes`)
-                        .setDescription(`**${schedule.MataKuliah}** (_${schedule.Kode}_) will start in **${diffFromNow} minutes**.`)
-                        .setThumbnail(amikomLogoURL)
-                        .addFields(
-                            {
-                                name: "Lecturer",
-                                value: schedule.NamaDosen || "N/A",
-                                inline: true,
-                            },
-                            {
-                                name: "Time / Duration",
-                                value: `${start.format("HH:mm")} - ${end.format("HH:mm")} (${duration})`,
-                                inline: true,
-                            },
-                            {
-                                name: "Room",
-                                value: schedule.Ruang || "N/A",
-                                inline: true,
-                            }
-                        );
-
-                    await this.sendMessage(scheduleId, { embeds: [comingEmbed] });
-                }
-            } catch (e) {
-                console.error(`[${tags.Error}] Failed to send reminder message:`);
-                console.error(e);
-            }
-        });
+        await this.check();
     }
 
-    private async sendMessage(scheduleId: string, content: MessageCreateOptions): Promise<void> {
-        const allGuilds = await Subscriptions.fetchByScheduleId(scheduleId);
-        const allDestinations = allGuilds.map(g => {
-            return {
-                guild_id: g.guild_id,
-                channel_id: g.channel_id,
-                is_active: g.is_active,
-                mentions: g.mentions,
-            };
-        });
+    private async check(): Promise<void> {
+        const redis = redisClient.duplicate();
 
-        for (const destination of allDestinations) {
-            try {
-                if (!destination.is_active) continue;
+        await redis.subscribe(reminderChannelName);
 
-                const guild_id = destination.guild_id;
-                const channelId = destination.channel_id;
-                const mentions = destination.mentions;
+        redis.on("message", (channel, message) => {
+            void (async (): Promise<void> => {
+                if (channel === reminderChannelName) {
+                    if (typeof message !== "string") {
+                        console.warn(`[${tags.DiscordListener}] Received non-string message:`, message);
+                        return;
+                    }
 
-                const guild = client.guilds.cache.get(guild_id);
-                if (!guild) {
-                    console.error(`[${tags.Error}] Guild with ID ${guild_id} not found in cache.`);
-                    continue;
+                    let payload: ReminderPayload | null;
+
+                    try {
+                        payload = JSON.parse(message) as ReminderPayload | null;
+                    } catch (e) {
+                        console.error(`[${tags.Error}] Failed to parse reminder payload:`);
+                        console.error(e);
+                        return;
+                    }
+
+                    if (!payload) {
+                        console.warn(`[${tags.DiscordListener}] Received payload with missing data or metadata.`);
+                        return;
+                    }
+
+                    const { data: sch, metadata } = payload;
+                    const { subscriptions } = sch;
+
+                    if (!Array.isArray(subscriptions) || subscriptions.length === 0) {
+                        return;
+                    }
+
+                    for (const sub of subscriptions) {
+                        const now = moment().tz("Asia/Jakarta");
+
+                        const guildId = sub.guildId;
+                        const channelId = sub.channelId;
+
+                        const time = sch.Waktu;
+                        const { start, end } = helper.resolveClassTime({ time, now });
+
+                        const durationMinutes = end.diff(start, "minutes");
+                        const diffInMinutes = Math.max(0, start.diff(now, "minutes"));
+                        const startFormatted = start.format("HH:mm");
+                        const endFormatted = end.format("HH:mm");
+                        const durationFormatted = helper.formatDuration(durationMinutes);
+                        const remainingSeconds = end.diff(now, "seconds");
+                        const isHappeningNow = metadata.isHappeningNow;
+
+                        const room = sch.Ruang;
+                        const { string, type } = helper.resolveRoomCode(room);
+
+                        // overlapping check
+                        // TODO: i think it would be better to put this on the pub side insetad of sub side.
+                        if (!isHappeningNow) {
+                            const isOnGoing = await schedules.isOnGoing({ guildId, userId: sub.userId });
+                            if (isOnGoing) {
+                                console.log(`[${tags.DiscordListener}] Skipping reminder for user ${sub.userId} in guild ${guildId} because they have an ongoing class.`);
+                                continue;
+                            }
+                        }
+
+                        // state check
+                        const stateCheck: StateProp = {
+                            eventName: `reminder_${metadata.minutesBefore}`,
+                            userId: sub.userId,
+                            scheduleId: sch.id,
+                            guildId
+                        };
+                        const alreadyChecked = await schedules.getState(stateCheck);
+                        if (alreadyChecked) continue;
+
+                        const reminderEmbed = new EmbedBuilder()
+                            .setColor(Colors.Orange)
+                            .setTitle(sch.MataKuliah)
+                            .setThumbnail(amikomLogoURL)
+                            .addFields([
+                                {
+                                    name: "Time / Duration",
+                                    value: `**${startFormatted} - ${endFormatted}** / ${durationFormatted}`,
+                                    inline: true
+                                },
+                                {
+                                    name: "Room",
+                                    value: `**${room}**\n(${string}) [${type}]`,
+                                    inline: true
+                                },
+                                {
+                                    name: "Lecturer",
+                                    value: sch.NamaDosen,
+                                    inline: true
+                                }
+                            ]);
+
+                        if (isHappeningNow) {
+                            reminderEmbed.setAuthor({ name: `Class is starting now!` });
+                        } else {
+                            reminderEmbed.setAuthor({ name: `A class will begin in ${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''}!` });
+                        }
+
+                        // send
+                        const guild = client.guilds.cache.get(guildId);
+                        if (!guild) {
+                            console.warn(`[${tags.DiscordListener}] Guild with ID ${guildId} not found.`);
+                            continue;
+                        }
+
+                        const channel = guild.channels.cache.get(channelId);
+                        if (!channel || !channel.isTextBased()) {
+                            console.warn(`[${tags.DiscordListener}] Channel with ID ${channelId} not found or is not text-based in guild ${guildId}.`);
+                            continue;
+                        }
+
+                        try {
+                            await channel.send({
+                                embeds: [reminderEmbed]
+                            });
+
+                            await schedules.setState(stateCheck, true);
+
+                            if (isHappeningNow && remainingSeconds > 0) {
+                                await schedules.setOnGoing({ guildId, userId: sub.userId }, remainingSeconds);
+                            }
+                        } catch (e) {
+                            console.error(`[${tags.DiscordListener}] Failed to send reminder message to channel ${channelId} in guild ${guildId}.`);
+                            console.error(e);
+                        }
+                    }
                 }
-
-                const channel = guild.channels.cache.get(channelId);
-
-                if (!channel) {
-                    console.error(`[${tags.Error}] Channel with ID ${channelId} not found in guild ${guild_id}.`);
-                    continue;
-                }
-
-                if (channel.isTextBased()) {
-                    console.log(`[${tags.Reminder}] Sending ${channel} reminder to ${guild.name}`);
-
-                    const mentionPrefix = mentions?.length
-                        ? mentions.map((x) => `<@${x}>`).join(" ")
-                        : "";
-                    const baseContent = content.content ?? "";
-
-                    await channel.send({
-                        ...content,
-                        content: mentionPrefix
-                            ? [mentionPrefix, baseContent].filter(Boolean).join(" ")
-                            : (baseContent || undefined),
-                    });
-                }
-            } catch (e) {
-                console.error(`[${tags.Error}] Failed to send reminder messages:`);
+            })().catch((e: unknown) => {
+                console.error(`[${tags.Error}] An error occurred in the reminder listener loop:`);
                 console.error(e);
-            }
-        }
+            });
+        });
     }
 }
